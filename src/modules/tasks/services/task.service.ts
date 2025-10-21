@@ -22,7 +22,10 @@ export class TaskService {
     return await this.taskRepository.updateOne(id, changes)
   }
 
-  async deleteOne(id: string): Promise<void> {
+  /**
+   * @returns true if an element in the Map existed and has been removed, or false if the element does not exist.
+   */
+  async deleteOne(id: string): Promise<boolean> {
     return await this.taskRepository.deleteOne(id)
   }
 }

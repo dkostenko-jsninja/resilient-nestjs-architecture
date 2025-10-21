@@ -8,7 +8,7 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  async getAll(@Res() res: Response) {
+  async getAll(@Res({ passthrough: true }) res: Response) {
     const tasks = await this.taskService.getAll()
 
     res.header('Cache-Control', 'private, no-cache, must-revalidate')
@@ -17,11 +17,11 @@ export class TaskController {
       res.header('Last-Modified', new Date(lastModified).toUTCString())
     }
 
-    res.status(200).json(tasks)
+    return tasks
   }
 
   @Get(':id')
-  async getOne(@Param('id') id: string, @Res() res: Response) {
+  async getOne(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
     const task = await this.taskService.getOne(id)
 
     if (!task) {
@@ -30,7 +30,8 @@ export class TaskController {
 
     res.header('Cache-Control', 'private, no-cache, must-revalidate')
     res.header('Last-Modified', task.updatedAt.toUTCString())
-    res.status(200).json(task)
+
+    return task
   }
 
   @Post()
@@ -51,6 +52,9 @@ export class TaskController {
   @Delete(':id')
   @HttpCode(204)
   async deleteOne(@Param('id') id: string) {
-    await this.taskService.deleteOne(id)
+    const isDeleted = await this.taskService.deleteOne(id)
+    if (!isDeleted) {
+      throw new NotFoundException()
+    }
   }
 }

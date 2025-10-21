@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { Task, TaskStatus } from '../../../entities/task.entity'
 import { TaskRepository } from '../../../entities/task.repository'
 
@@ -15,7 +16,7 @@ export class InMemoryTaskRepository implements TaskRepository {
   async createOne(task: Task): Promise<Task> {
     const createdTask: Task = {
       ...task,
-      id: String(this.tasks.size + 1),
+      id: randomUUID(),
       status: task.status || TaskStatus.PENDING,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -34,7 +35,7 @@ export class InMemoryTaskRepository implements TaskRepository {
     return updatedTask!
   }
 
-  async deleteOne(id: string): Promise<void> {
-    this.tasks.delete(id)
+  async deleteOne(id: string): Promise<boolean> {
+    return this.tasks.delete(id)
   }
 }
