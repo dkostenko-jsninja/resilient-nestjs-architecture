@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory, SchemaOptions } from '@nestjs/mongoose'
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { randomUUID } from 'crypto'
 import { Task, TaskStatus } from 'src/modules/tasks/entities/task.entity'
 
@@ -12,7 +12,7 @@ export class TaskSchema implements Task {
   @Prop({ type: String })
   name: string
 
-  @Prop({ type: String, enum: Object.values(TaskStatus), required: true })
+  @Prop({ type: String, enum: Object.values(TaskStatus), default: TaskStatus.PENDING })
   status: TaskStatus
 
   createdAt: Date

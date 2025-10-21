@@ -4,12 +4,18 @@ export enum TaskStatus {
   COMPLETED = 'completed',
 }
 
-export class Task {
-  id: string
+export interface CreateTaskInput {
   name: string
-  status: TaskStatus
-  createdAt: Date
-  updatedAt: Date
+  status?: TaskStatus
+}
+export type UpdateTaskInput = Partial<CreateTaskInput>
+
+export class Task {
+  readonly id: string
+  readonly name: string
+  readonly status: TaskStatus
+  readonly createdAt: Date
+  readonly updatedAt: Date
 
   constructor(task: Task) {
     this.id = task.id

@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Param, Post, Put, Res } from '@nestjs/common'
 import type { Response } from 'express'
-import type { Task } from '../../../entities/task.entity'
 import { TaskService } from '../../../services/task.service'
+import { CreateTaskDto, TaskIdParamDto, UpdateTaskDto } from './task.dto'
 
 @Controller('tasks')
 export class TaskController {
@@ -21,8 +21,8 @@ export class TaskController {
   }
 
   @Get(':id')
-  async getOne(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
-    const task = await this.taskService.getOne(id)
+  async getOne(@Param() params: TaskIdParamDto, @Res({ passthrough: true }) res: Response) {
+    const task = await this.taskService.getOne(params.id)
 
     if (!task) {
       throw new NotFoundException()
@@ -36,13 +36,13 @@ export class TaskController {
 
   @Post()
   @HttpCode(201)
-  createOne(@Body() task: Task) {
+  createOne(@Body() task: CreateTaskDto) {
     return this.taskService.createOne(task)
   }
 
   @Put(':id')
-  async updateOne(@Param('id') id: string, @Body() task: Task) {
-    const updatedTask = await this.taskService.updateOne(id, task)
+  async updateOne(@Param() params: TaskIdParamDto, @Body() task: UpdateTaskDto) {
+    const updatedTask = await this.taskService.updateOne(params.id, task)
     if (!updatedTask) {
       throw new NotFoundException()
     }
@@ -51,8 +51,8 @@ export class TaskController {
 
   @Delete(':id')
   @HttpCode(204)
-  async deleteOne(@Param('id') id: string) {
-    const isDeleted = await this.taskService.deleteOne(id)
+  async deleteOne(@Param() params: TaskIdParamDto) {
+    const isDeleted = await this.taskService.deleteOne(params.id)
     if (!isDeleted) {
       throw new NotFoundException()
     }
