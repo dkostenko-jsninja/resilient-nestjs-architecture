@@ -10,9 +10,7 @@ import { TaskService } from './services/task.service'
 
 @Module({
   imports: [
-    // Uncomment if you want to use MongoDB
-    // MongoConfigModule,
-
+    // MongoConfigModule, // Uncomment if you want to use MongoDB
     PostgresConfigModule,
   ],
   controllers: [TaskController],
@@ -23,17 +21,17 @@ import { TaskService } from './services/task.service'
     //   useFactory: (connection: Connection) => connection.model(TASK_MODEL_NAME, taskSchema),
     //   inject: [MONGO_CONNECTION],
     // },
-    // { provide: TASK_REPOSITORY, useClass: MongoTaskRepository },
-
-    // Uncomment if you want to use In-Memory DB
-    // { provide: TASK_REPOSITORY, useClass: InMemoryTaskRepository },
-
     {
       provide: POSTGRES_TASK_REPOSITORY,
       useFactory: (dataSource: DataSource) => dataSource.getRepository(TaskEntity),
       inject: [POSTGRES_DATA_SOURCE],
     },
-    { provide: TASK_REPOSITORY, useClass: PostgresTaskRepository },
+    {
+      provide: TASK_REPOSITORY,
+      useClass: PostgresTaskRepository,
+      // useClass: InMemoryTaskRepository // Uncomment if you want to use In-Memory DB
+      // useClass: MongoTaskRepository // Uncomment if you want to use MongoDB
+    },
 
     TaskService,
   ],
