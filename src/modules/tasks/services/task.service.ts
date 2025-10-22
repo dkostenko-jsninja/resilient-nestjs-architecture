@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { Task } from '../entities/task.entity'
+import { CreateTaskInput, Task, UpdateTaskInput } from '../entities/task.entity'
 import { TASK_REPOSITORY, type TaskRepository } from '../entities/task.repository'
 
 @Injectable()
@@ -14,15 +14,18 @@ export class TaskService {
     return await this.taskRepository.findById(id)
   }
 
-  async createOne(task: Task): Promise<Task> {
+  async createOne(task: CreateTaskInput): Promise<Task> {
     return await this.taskRepository.createOne(task)
   }
 
-  async updateOne(id: string, changes: Partial<Task>): Promise<Task | null> {
+  async updateOne(id: string, changes: UpdateTaskInput): Promise<Task | null> {
     return await this.taskRepository.updateOne(id, changes)
   }
 
-  async deleteOne(id: string): Promise<void> {
+  /**
+   * @returns true if an element in the Map existed and has been removed, or false if the element does not exist.
+   */
+  async deleteOne(id: string): Promise<boolean> {
     return await this.taskRepository.deleteOne(id)
   }
 }
