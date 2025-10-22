@@ -10,7 +10,7 @@ export interface MongoConfig {
 
 export const configFactory = registerAs(MONGO_CONFIG_KEY, () => {
   const configuration: MongoConfig = {
-    url: process.env.MONGO_URL!,
+    url: process.env.MONGO_URL ?? '',
   }
 
   const validationSchema = Joi.object({
