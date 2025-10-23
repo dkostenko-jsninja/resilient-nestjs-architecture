@@ -4,11 +4,11 @@ import { CircuitBreakerService } from 'src/common/infrastructure/circuit-breaker
 import { PostgresConfigModule } from 'src/configs/postgres/config.module'
 import { POSTGRES_DATA_SOURCE } from 'src/configs/postgres/constants'
 import { DataSource } from 'typeorm'
-import { TaskController } from './interface/api/http/rest/task.controller'
-import { TASK_REPOSITORY, TaskRepository } from './entities/task.repository'
+import { TaskService } from './application/task.service'
+import { TASK_REPOSITORY, TaskRepository } from './domain/task.repository'
 import { TaskEntity } from './infrastructure/db/postgres/task.entity'
 import { POSTGRES_TASK_REPOSITORY, PostgresTaskRepository } from './infrastructure/db/postgres/task.repository'
-import { TaskService } from './services/task.service'
+import { TaskController } from './interface/api/http/rest/task.controller'
 
 @Module({
   imports: [

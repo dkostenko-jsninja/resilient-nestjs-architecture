@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { Repository } from 'typeorm'
-import { CreateTaskInput, Task, UpdateTaskInput } from '../../../entities/task.entity'
-import { TaskRepository } from '../../../entities/task.repository'
+import { CreateTaskInput, Task, UpdateTaskInput } from '../../../domain/task.entity'
+import { TaskRepository } from '../../../domain/task.repository'
 import { TaskEntity } from './task.entity'
 
 export const POSTGRES_TASK_REPOSITORY = Symbol('POSTGRES_TASK_REPOSITORY')

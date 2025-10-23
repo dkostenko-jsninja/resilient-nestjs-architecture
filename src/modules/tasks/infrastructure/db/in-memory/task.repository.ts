@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto'
-import { CreateTaskInput, Task, TaskStatus, UpdateTaskInput } from '../../../entities/task.entity'
-import { TaskRepository } from '../../../entities/task.repository'
+import { CreateTaskInput, Task, TaskStatus, UpdateTaskInput } from 'src/modules/tasks/domain/task.entity'
+import { TaskRepository } from 'src/modules/tasks/domain/task.repository'
 
 export class InMemoryTaskRepository implements TaskRepository {
   private tasks = new Map<string, Task>()

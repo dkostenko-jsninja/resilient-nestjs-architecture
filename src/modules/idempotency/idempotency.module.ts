@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
 import { APP_INTERCEPTOR } from '@nestjs/core'
+import { CACHE_SERVICE } from 'src/common/application/cache.service'
 import { RedisCacheService } from 'src/common/infrastructure/cache/redis/cache.service'
 import { withCircuitBreaker } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.provider'
 import { CircuitBreakerService } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.service'
-import { CACHE_SERVICE } from 'src/common/services/cache.service'
 import { RedisConfigModule } from 'src/configs/redis/config.module'
 import { IdempotencyInterceptor } from './interface/api/http/idempotency.interceptor'
 

@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Param, Post, Put, Res, UseFilters } from '@nestjs/common'
 import type { Response } from 'express'
 import { ServiceUnavailableFilter } from 'src/common/interface/api/http/filters/service-unavailable.filter'
-import { TaskService } from 'src/modules/tasks/services/task.service'
+import { TaskService } from 'src/modules/tasks/application/task.service'
 import { CreateTaskDto, TaskIdParamDto, UpdateTaskDto } from './task.dto'
 
 @UseFilters(ServiceUnavailableFilter)

@@ -11,7 +11,7 @@ import { isUUID } from 'class-validator'
 import { Request, Response } from 'express'
 import { Observable, from, of, throwError } from 'rxjs'
 import { catchError, map, mergeMap } from 'rxjs/operators'
-import { CACHE_SERVICE, type CacheService } from 'src/common/services/cache.service'
+import { CACHE_SERVICE, type CacheService } from 'src/common/application/cache.service'
 
 interface CachedResponse {
   statusCode: number

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { Model } from 'mongoose'
-import { CreateTaskInput, Task, UpdateTaskInput } from 'src/modules/tasks/entities/task.entity'
-import { TaskRepository } from 'src/modules/tasks/entities/task.repository'
+import { CreateTaskInput, Task, UpdateTaskInput } from 'src/modules/tasks/domain/task.entity'
+import { TaskRepository } from 'src/modules/tasks/domain/task.repository'
 import { TASK_MODEL } from './task.schema'
 
 @Injectable()

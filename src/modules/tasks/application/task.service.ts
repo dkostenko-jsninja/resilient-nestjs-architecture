@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { CreateTaskInput, Task, UpdateTaskInput } from '../entities/task.entity'
-import { TASK_REPOSITORY, type TaskRepository } from '../entities/task.repository'
+import { CreateTaskInput, Task, UpdateTaskInput } from '../domain/task.entity'
+import { TASK_REPOSITORY, type TaskRepository } from '../domain/task.repository'
 
 @Injectable()
 export class TaskService {

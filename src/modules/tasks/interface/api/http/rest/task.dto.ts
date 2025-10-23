@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types'
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator'
-import { CreateTaskInput, TaskStatus } from 'src/modules/tasks/entities/task.entity'
+import { CreateTaskInput, TaskStatus } from 'src/modules/tasks/domain/task.entity'
 
 export class CreateTaskDto implements CreateTaskInput {
   @IsString()

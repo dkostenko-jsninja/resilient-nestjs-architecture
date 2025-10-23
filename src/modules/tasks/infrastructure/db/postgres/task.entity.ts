@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
-import { Task, TaskStatus } from '../../../entities/task.entity'
+import { Task, TaskStatus } from '../../../domain/task.entity'
 
 @Entity({ name: 'task' })
 export class TaskEntity implements Task {
