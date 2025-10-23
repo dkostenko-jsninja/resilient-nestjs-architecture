@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import Redis from 'ioredis'
-import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/service/cache.service'
+import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/services/cache.service'
 import { REDIS_CLIENT } from 'src/configs/redis/constants'
 
 @Injectable()
@@ -45,6 +45,7 @@ export class RedisCacheService implements CacheService {
             result = await this.redis.set(key, payload, 'XX')
             break
         }
+        break
 
       case 'ifNotExists':
         switch (ttlMode) {
@@ -58,6 +59,7 @@ export class RedisCacheService implements CacheService {
             result = await this.redis.set(key, payload, 'NX')
             break
         }
+        break
 
       default:
         switch (ttlMode) {

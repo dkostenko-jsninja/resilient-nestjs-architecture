@@ -17,7 +17,9 @@ export class RedisConfigService implements OnApplicationShutdown {
     return this._client
   }
 
-  onApplicationShutdown() {
-    this._client?.quit()
+  async onApplicationShutdown() {
+    if (this._client) {
+      this._client?.quit()
+    }
   }
 }

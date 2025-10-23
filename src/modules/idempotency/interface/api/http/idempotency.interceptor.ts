@@ -5,13 +5,13 @@ import {
   Inject,
   Injectable,
   NestInterceptor,
-  RequestTimeoutException
+  RequestTimeoutException,
 } from '@nestjs/common'
 import { isUUID } from 'class-validator'
 import { Request, Response } from 'express'
 import { Observable, from, of, throwError } from 'rxjs'
 import { catchError, map, mergeMap } from 'rxjs/operators'
-import { CACHE_SERVICE, type CacheService } from 'src/common/service/cache.service'
+import { CACHE_SERVICE, type CacheService } from 'src/common/services/cache.service'
 
 interface CachedResponse {
   statusCode: number
