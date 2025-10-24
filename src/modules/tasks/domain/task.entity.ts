@@ -1,3 +1,5 @@
+import { CommonEntity } from 'src/common/domain/entity'
+
 export enum TaskStatus {
   PENDING = 'pending',
   IN_PROGRESS = 'in_progress',
@@ -10,7 +12,7 @@ export interface CreateTaskInput {
 }
 export type UpdateTaskInput = Partial<CreateTaskInput>
 
-export class Task {
+export class Task implements CommonEntity {
   readonly id: string
   readonly name: string
   readonly status: TaskStatus

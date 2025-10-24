@@ -29,7 +29,7 @@ import { TaskController } from './interface/api/http/rest/task.controller'
       inject: [POSTGRES_DATA_SOURCE],
     },
     PostgresTaskRepository,
-    // InMemoryTaskRepository // Uncomment if you want to use In-Memory DB
+    // InMemoryTaskRepository, // Uncomment if you want to use In-Memory DB
     // MongoTaskRepository, // Uncomment if you want to use MongoDB
     {
       provide: TASK_REPOSITORY,
@@ -37,7 +37,7 @@ import { TaskController } from './interface/api/http/rest/task.controller'
       inject: [
         CircuitBreakerService,
         PostgresTaskRepository,
-        // InMemoryTaskRepository // Uncomment if you want to use In-Memory DB
+        // InMemoryTaskRepository, // Uncomment if you want to use In-Memory DB
         // MongoTaskRepository, // Uncomment if you want to use MongoDB
       ],
     },
