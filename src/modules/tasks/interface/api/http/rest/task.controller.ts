@@ -1,13 +1,21 @@
-import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Param, Post, Put, Res, UseFilters } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpStatus, NotFoundException, Param, Post, Put, Res, UseFilters } from '@nestjs/common'
 import type { Response } from 'express'
+import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
 import { ServiceUnavailableFilter } from 'src/common/interface/api/http/filters/service-unavailable.filter'
+import { TaskMessageInput, TaskMessageState } from 'src/modules/tasks/application/task-message'
+import { TaskMessagePublisherService } from 'src/modules/tasks/application/task-message-publisher.service'
+import { TaskMessageStateService } from 'src/modules/tasks/application/task-message-state.service'
 import { TaskService } from 'src/modules/tasks/application/task.service'
 import { CreateTaskDto, TaskIdParamDto, UpdateTaskDto } from './task.dto'
 
 @UseFilters(ServiceUnavailableFilter)
 @Controller('tasks')
 export class TaskController {
-  constructor(private readonly taskService: TaskService) {}
+  constructor(
+    private readonly taskService: TaskService,
+    private readonly taskMessagePublisherService: TaskMessagePublisherService,
+    private readonly taskMessageStateService: TaskMessageStateService,
+  ) {}
 
   @Get()
   async getAll(@Res({ passthrough: true }) res: Response) {
@@ -37,26 +45,75 @@ export class TaskController {
   }
 
   @Post()
-  @HttpCode(201)
-  createOne(@Body() task: CreateTaskDto) {
-    return this.taskService.createOne(task)
+  async createOne(@Body() task: CreateTaskDto, @Res({ passthrough: true }) res: Response) {
+    try {
+      const createdTask = await this.taskService.createOne(task)
+      res.status(HttpStatus.CREATED)
+      return createdTask
+    } catch (error) {
+      if (error instanceof TransientInfrastructureError) {
+        return await this.enqueue(res, { key: 'create', payload: task }, error)
+      }
+      throw error
+    }
   }
 
   @Put(':id')
-  async updateOne(@Param() params: TaskIdParamDto, @Body() task: UpdateTaskDto) {
-    const updatedTask = await this.taskService.updateOne(params.id, task)
-    if (!updatedTask) {
-      throw new NotFoundException()
+  async updateOne(@Param() params: TaskIdParamDto, @Body() task: UpdateTaskDto, @Res({ passthrough: true }) res: Response) {
+    try {
+      const updatedTask = await this.taskService.updateOne(params.id, task)
+      if (!updatedTask) {
+        throw new NotFoundException()
+      }
+      res.status(HttpStatus.OK)
+      return updatedTask
+    } catch (error) {
+      if (error instanceof TransientInfrastructureError) {
+        return await this.enqueue(res, { key: 'update', payload: { id: params.id, changes: task } }, error)
+      }
+      throw error
     }
-    return updatedTask
   }
 
   @Delete(':id')
-  @HttpCode(204)
-  async deleteOne(@Param() params: TaskIdParamDto) {
-    const isDeleted = await this.taskService.deleteOne(params.id)
-    if (!isDeleted) {
+  async deleteOne(@Param() params: TaskIdParamDto, @Res({ passthrough: true }) res: Response) {
+    try {
+      const isDeleted = await this.taskService.deleteOne(params.id)
+      if (!isDeleted) {
+        throw new NotFoundException()
+      }
+      res.status(HttpStatus.NO_CONTENT)
+    } catch (error) {
+      if (error instanceof TransientInfrastructureError) {
+        return await this.enqueue(res, { key: 'delete', payload: { id: params.id } }, error)
+      }
+      throw error
+    }
+  }
+
+  @Get('/queued/:id')
+  async getQueuedState(@Param() params: TaskIdParamDto, @Res({ passthrough: true }) res: Response) {
+    const state = await this.taskMessageStateService.getState(params.id)
+    if (!state) {
       throw new NotFoundException()
     }
+    res.header('Cache-Control', 'private, no-store')
+    return state
+  }
+
+  private async enqueue(
+    res: Response,
+    message: TaskMessageInput,
+    error: TransientInfrastructureError,
+  ): Promise<TaskMessageState & { location: string; retryAfter: number }> {
+    const state = await this.taskMessagePublisherService.enqueue(message)
+
+    const location = `/tasks/queued/${state.id}`
+    const retryAfter = Math.ceil(error.retryAfter / 1000)
+
+    res.setHeader('Location', location)
+    res.status(HttpStatus.ACCEPTED)
+
+    return { ...state, location, retryAfter }
   }
 }

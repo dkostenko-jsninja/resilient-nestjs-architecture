@@ -1,48 +1,15 @@
 import { Module } from '@nestjs/common'
-import { withCircuitBreaker } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.provider'
-import { CircuitBreakerService } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.service'
-import { PostgresConfigModule } from 'src/configs/postgres/config.module'
-import { POSTGRES_DATA_SOURCE } from 'src/configs/postgres/constants'
-import { DataSource } from 'typeorm'
+import { RabbitMqFeatureModule } from 'src/common/infrastructure/queue/rabbitmq/rabbitmq.module'
+import { TaskMessagePublisherService } from './application/task-message-publisher.service'
+import { TaskMessageStateService } from './application/task-message-state.service'
 import { TaskService } from './application/task.service'
-import { TASK_REPOSITORY, TaskRepository } from './domain/task.repository'
-import { TaskEntity } from './infrastructure/db/postgres/task.entity'
-import { POSTGRES_TASK_REPOSITORY, PostgresTaskRepository } from './infrastructure/db/postgres/task.repository'
+import { TASK_QUEUE_CONFIG } from './infrastructure/queue/rabbitmq/task-queue.config'
 import { TaskController } from './interface/api/http/rest/task.controller'
+import { TasksRepositoryModule } from './tasks-repository.module'
 
 @Module({
-  imports: [
-    // MongoConfigModule, // Uncomment if you want to use MongoDB
-    PostgresConfigModule,
-  ],
+  imports: [RabbitMqFeatureModule.forPublisherFeature(TASK_QUEUE_CONFIG), TasksRepositoryModule],
   controllers: [TaskController],
-  providers: [
-    // Uncomment if you want to use MongoDB
-    // {
-    //   provide: TASK_MODEL,
-    //   useFactory: (connection: Connection) => connection.model(TASK_MODEL_NAME, taskSchema),
-    //   inject: [MONGO_CONNECTION],
-    // },
-    {
-      provide: POSTGRES_TASK_REPOSITORY,
-      useFactory: (dataSource: DataSource) => dataSource.getRepository(TaskEntity),
-      inject: [POSTGRES_DATA_SOURCE],
-    },
-    PostgresTaskRepository,
-    // InMemoryTaskRepository, // Uncomment if you want to use In-Memory DB
-    // MongoTaskRepository, // Uncomment if you want to use MongoDB
-    {
-      provide: TASK_REPOSITORY,
-      useFactory: (breaker: CircuitBreakerService, repository: TaskRepository) => withCircuitBreaker(breaker, repository),
-      inject: [
-        CircuitBreakerService,
-        PostgresTaskRepository,
-        // InMemoryTaskRepository, // Uncomment if you want to use In-Memory DB
-        // MongoTaskRepository, // Uncomment if you want to use MongoDB
-      ],
-    },
-
-    TaskService,
-  ],
+  providers: [TaskMessageStateService, TaskMessagePublisherService, TaskService],
 })
 export class TasksModule {}
