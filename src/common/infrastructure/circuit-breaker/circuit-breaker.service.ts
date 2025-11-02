@@ -1,30 +1,32 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import CircuitBreaker from 'opossum'
-import { CircuitOpenError } from 'src/common/errors/circuit-open.error'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
+
+export const CIRCUIT_BREAKER_NAME = 'CIRCUIT_BREAKER_NAME'
 
 @Injectable()
 export class CircuitBreakerService implements OnModuleDestroy {
-  private readonly logger = new Logger(CircuitBreakerService.name)
+  private readonly logger: Logger
   private readonly breaker: CircuitBreaker<[() => Promise<unknown>], unknown>
   private readonly breakerOptions: CircuitBreaker.Options<[operation: () => Promise<unknown>]> = {
-    timeout: 5000,
+    timeout: 3000,
     errorThresholdPercentage: 50,
-    resetTimeout: 10000,
-    rollingCountTimeout: 10000,
+    resetTimeout: 30000,
+    rollingCountTimeout: 30000,
     rollingCountBuckets: 10,
-    volumeThreshold: 5,
+    volumeThreshold: 10,
+    allowWarmUp: true,
   }
 
-  constructor() {
+  constructor(@Inject(CIRCUIT_BREAKER_NAME) private readonly name: string) {
+    this.logger = new Logger(`${this.name} Circuit`)
     this.breaker = new CircuitBreaker((operation) => operation(), this.breakerOptions)
-
-    this.breaker.on('open', () => this.logger.warn('Circuit OPEN'))
-    this.breaker.on('halfOpen', () => this.logger.log('Circuit HALF-OPEN'))
-    this.breaker.on('close', () => this.logger.log('Circuit CLOSED'))
-    this.breaker.on('timeout', () => this.logger.warn('Circuit operation timed out'))
-    this.breaker.on('reject', () => this.logger.warn('Circuit operation rejected (breaker open)'))
-    this.breaker.on('failure', (err: Error) => this.logger.warn(`Circuit operation failure: ${err.message}`))
+    this.breaker.on('open', () => this.logger.warn('OPEN'))
+    this.breaker.on('halfOpen', () => this.logger.log('HALF-OPEN'))
+    this.breaker.on('close', () => this.logger.log('CLOSED'))
+    this.breaker.on('timeout', () => this.logger.warn('Operation timed out'))
+    this.breaker.on('reject', () => this.logger.warn('Operation rejected (breaker open)'))
+    this.breaker.on('failure', (err: Error) => this.logger.warn(`Operation failure: ${err.message}`))
   }
 
   async fire<T>(operation: () => Promise<T>): Promise<T> {
@@ -35,11 +37,7 @@ export class CircuitBreakerService implements OnModuleDestroy {
       // For the sake of simplicity, we assume that all application and infrastructure logic works correctly,
       // and any thrown error represents a distributed system failure (e.g., DB, cache, etc).
       // Ideally, these errors should be properly classified.
-      if (this.breaker.opened) {
-        throw new CircuitOpenError('Circuit open. Try again later', this.breakerOptions.resetTimeout, error)
-      } else {
-        throw new TransientInfrastructureError('Dependency unavailable', this.breakerOptions.resetTimeout, error)
-      }
+      throw new TransientInfrastructureError('Dependency unavailable', this.breakerOptions.resetTimeout, error)
     }
   }
 

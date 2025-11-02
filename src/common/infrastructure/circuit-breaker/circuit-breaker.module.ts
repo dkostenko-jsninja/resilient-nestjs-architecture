@@ -1,9 +1,13 @@
-import { Global, Module } from '@nestjs/common'
-import { CircuitBreakerService } from './circuit-breaker.service'
+import { DynamicModule, Module } from '@nestjs/common'
+import { CIRCUIT_BREAKER_NAME, CircuitBreakerService } from './circuit-breaker.service'
 
-@Global()
-@Module({
-  providers: [CircuitBreakerService],
-  exports: [CircuitBreakerService],
-})
-export class CircuitBreakerModule {}
+@Module({})
+export class CircuitBreakerModule {
+  static forFeature(name: string): DynamicModule {
+    return {
+      module: CircuitBreakerModule,
+      providers: [CircuitBreakerService, { provide: CIRCUIT_BREAKER_NAME, useValue: name }],
+      exports: [CircuitBreakerService],
+    }
+  }
+}

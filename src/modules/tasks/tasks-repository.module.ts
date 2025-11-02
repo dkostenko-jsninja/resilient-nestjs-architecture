@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { CircuitBreakerModule } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.module'
 import { withCircuitBreaker } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.provider'
 import { CircuitBreakerService } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.service'
 import { POSTGRES_DATA_SOURCE, PostgresModule } from 'src/common/infrastructure/db/postgres/postgres.module'
@@ -11,6 +12,7 @@ import { POSTGRES_TASK_REPOSITORY, PostgresTaskRepository } from './infrastructu
   imports: [
     // MongoModule, // Uncomment if you want to use MongoDB
     PostgresModule,
+    CircuitBreakerModule.forFeature(TasksRepositoryModule.name),
   ],
   providers: [
     // Uncomment if you want to use MongoDB

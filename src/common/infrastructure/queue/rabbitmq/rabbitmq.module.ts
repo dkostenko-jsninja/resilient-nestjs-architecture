@@ -1,9 +1,12 @@
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
-import { DynamicModule, Global, Module, Provider } from '@nestjs/common'
+import { DynamicModule, Module, Provider } from '@nestjs/common'
 import { Channel } from 'amqplib'
 import { MESSAGE_PUBLISHER_SERVICE } from 'src/common/application/message-publisher.service'
 import { MESSAGE_SUBSCRIBER_SERVICE } from 'src/common/application/message-subscriber.service'
 import { RabbitMqConfigModule } from 'src/configs/rabbitmq/config.module'
+import { CircuitBreakerModule } from '../../circuit-breaker/circuit-breaker.module'
+import { withCircuitBreaker } from '../../circuit-breaker/circuit-breaker.provider'
+import { CircuitBreakerService } from '../../circuit-breaker/circuit-breaker.service'
 import { RabbitMqPublisherService } from './message-publisher.service'
 import { RabbitMqSubscriberService } from './message-subscriber.service'
 import { RabbitMqFeatureConfig, RabbitMqRoutingKeys } from './rabbitmq.types'
@@ -19,7 +22,7 @@ const getRoutingKeys = (feature: string, keys: string[]): RabbitMqRoutingKeys =>
   }, {})
 
 @Module({
-  imports: [RabbitMqConfigModule],
+  imports: [RabbitMqConfigModule, CircuitBreakerModule.forFeature(RabbitMqFeatureModule.name)],
 })
 export class RabbitMqFeatureModule {
   static forPublisherFeature({ feature, keys }: RabbitMqFeatureConfig): DynamicModule {
@@ -29,8 +32,9 @@ export class RabbitMqFeatureModule {
     const providers: Provider[] = [
       {
         provide: MESSAGE_PUBLISHER_SERVICE,
-        useFactory: (connection: AmqpConnection) => new RabbitMqPublisherService(connection, exchange, routingKeys),
-        inject: [AmqpConnection],
+        useFactory: (breaker: CircuitBreakerService, connection: AmqpConnection) =>
+          withCircuitBreaker(breaker, new RabbitMqPublisherService(connection, exchange, routingKeys)),
+        inject: [CircuitBreakerService, AmqpConnection],
       },
     ]
 

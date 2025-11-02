@@ -1,11 +1,10 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common'
 import { Response } from 'express'
-import { CircuitOpenError } from 'src/common/errors/circuit-open.error'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
 
-@Catch(CircuitOpenError, TransientInfrastructureError)
+@Catch(TransientInfrastructureError)
 export class ServiceUnavailableFilter implements ExceptionFilter {
-  catch(err: CircuitOpenError | TransientInfrastructureError, host: ArgumentsHost) {
+  catch(err: TransientInfrastructureError, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<Response>()
 
