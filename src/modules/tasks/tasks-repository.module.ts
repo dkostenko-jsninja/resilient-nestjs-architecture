@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common'
 import { withCircuitBreaker } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.provider'
 import { CircuitBreakerService } from 'src/common/infrastructure/circuit-breaker/circuit-breaker.service'
-import { PostgresConfigModule } from 'src/configs/postgres/config.module'
-import { POSTGRES_DATA_SOURCE } from 'src/configs/postgres/constants'
+import { POSTGRES_DATA_SOURCE, PostgresModule } from 'src/common/infrastructure/db/postgres/postgres.module'
 import { DataSource } from 'typeorm'
 import { TASK_REPOSITORY, TaskRepository } from './domain/task.repository'
 import { TaskEntity } from './infrastructure/db/postgres/task.entity'
@@ -10,8 +9,8 @@ import { POSTGRES_TASK_REPOSITORY, PostgresTaskRepository } from './infrastructu
 
 @Module({
   imports: [
-    // MongoConfigModule, // Uncomment if you want to use MongoDB
-    PostgresConfigModule,
+    // MongoModule, // Uncomment if you want to use MongoDB
+    PostgresModule,
   ],
   providers: [
     // Uncomment if you want to use MongoDB

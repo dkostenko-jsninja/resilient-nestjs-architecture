@@ -1,1 +1,0 @@
-export const MONGO_CONNECTION = Symbol('MONGO_CONNECTION')
