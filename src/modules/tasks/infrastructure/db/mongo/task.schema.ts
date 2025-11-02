@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { randomUUID } from 'crypto'
-import { Task, TaskStatus } from 'src/modules/tasks/entities/task.entity'
+import { Task, TaskStatus } from 'src/modules/tasks/domain/task.entity'
 
 @Schema({ timestamps: true })
 export class TaskSchema implements Task {

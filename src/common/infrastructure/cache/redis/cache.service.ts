@@ -1,11 +1,26 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common'
 import Redis from 'ioredis'
-import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/service/cache.service'
-import { REDIS_CLIENT } from 'src/configs/redis/constants'
+import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/application/cache.service'
+import { RedisConfigService } from 'src/configs/redis/config.service'
 
 @Injectable()
-export class RedisCacheService implements CacheService {
-  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) {}
+export class RedisCacheService implements OnApplicationShutdown, CacheService {
+  private readonly logger = new Logger(RedisCacheService.name)
+  private readonly redis: Redis
+
+  constructor(configService: RedisConfigService) {
+    this.redis = new Redis(configService.url)
+  }
+
+  async onApplicationShutdown(): Promise<void> {
+    try {
+      await this.redis.quit()
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error('Failed to close Redis connection', error)
+      }
+    }
+  }
 
   async get<T>(key: string): Promise<T | null> {
     const raw = await this.redis.get(key)
@@ -45,6 +60,7 @@ export class RedisCacheService implements CacheService {
             result = await this.redis.set(key, payload, 'XX')
             break
         }
+        break
 
       case 'ifNotExists':
         switch (ttlMode) {
@@ -58,6 +74,7 @@ export class RedisCacheService implements CacheService {
             result = await this.redis.set(key, payload, 'NX')
             break
         }
+        break
 
       default:
         switch (ttlMode) {
