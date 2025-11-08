@@ -17,16 +17,16 @@ export class TaskMessageProcessorService {
   async handle(queue: MessageQueue, message: Message) {
     const { key, payload } = message as TaskMessage
 
-    const state = await this.taskMessageStateService.getState(payload.id)
-    if (!state || state.status !== 'pending') {
-      return
-    }
-
-    await this.taskMessageStateService.updateState({ id: state.id, status: TaskMessageStatus.IN_PROGRESS })
-
     let result: Task | boolean | null = null
-    try {
-      if (queue === 'main') {
+    if (queue === 'main') {
+      try {
+        const state = await this.taskMessageStateService.getState(payload.id)
+        if (!state || state.status !== 'pending') {
+          return
+        }
+
+        await this.taskMessageStateService.updateState({ id: state.id, status: TaskMessageStatus.IN_PROGRESS })
+
         switch (key) {
           case 'create':
             result = await this.taskService.createOne(payload.data)
@@ -38,12 +38,12 @@ export class TaskMessageProcessorService {
             result = await this.taskService.deleteOne(payload.data.id)
             break
         }
+      } catch (error) {
+        if (error instanceof TransientInfrastructureError) {
+          await this.taskMessageStateService.updateState({ id: payload.id, status: TaskMessageStatus.PENDING })
+        }
+        throw error
       }
-    } catch (error) {
-      if (error instanceof TransientInfrastructureError) {
-        await this.taskMessageStateService.updateState({ id: state.id, status: TaskMessageStatus.PENDING })
-      }
-      throw error
     }
 
     await this.taskMessageStateService.updateState({
