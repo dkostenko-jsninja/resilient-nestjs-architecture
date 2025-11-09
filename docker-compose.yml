@@ -1,6 +1,51 @@
 version: "3.9"
 
 services:
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node dist/main
+    env_file:
+      - .env.core
+      - .env.overlay
+    depends_on:
+      # - mongo # Uncomment if you want to use MongoDB
+      - postgres
+      - redis
+      - rabbitmq
+      - otel-collector
+    ports:
+      - "${PORT}:${PORT}"
+      - "${OTEL_PROMETHEUS_EXPORTER_API_PORT}:${OTEL_PROMETHEUS_EXPORTER_API_PORT}"
+    networks:
+      - backend
+    profiles:
+      - core
+
+  worker:
+    container_name: worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node dist/worker
+    env_file:
+      - .env.core
+      - .env.overlay
+    depends_on:
+      # - mongo # Uncomment if you want to use MongoDB
+      - postgres
+      - redis
+      - rabbitmq
+      - otel-collector
+    ports:
+      - "${OTEL_PROMETHEUS_EXPORTER_WORKER_PORT}:${OTEL_PROMETHEUS_EXPORTER_WORKER_PORT}"
+    networks:
+      - backend
+    profiles:
+      - core
+
   # Uncomment if you want to use MongoDB
   # mongo:
   #   image: mongo:7

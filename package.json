@@ -7,11 +7,13 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "dotenv": "dotenv -e .env.core -e .env.overlay --",
     "dotenv:local": "dotenv -e .env.core -e .env.overlay.local --",
     "start:api": "nest start --entryFile main",
     "start:api:local": "npm run dotenv:local -- npm run start:api",
     "start:worker": "nest start --entryFile worker",
     "start:worker:local": "npm run dotenv:local -- npm run start:worker",
+    "compose": "npm run dotenv -- sh -c './telemetry/render-templates.sh && docker compose --profile core --profile deps --profile telemetry up -d --build'",
     "compose:local": "npm run dotenv:local -- sh -c './telemetry/render-templates.sh && docker compose --profile deps --profile telemetry up -d --build'",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",

@@ -39,6 +39,7 @@ lerna-debug.log*
 .env.production.local
 .env.local
 .env.core
+.env.overlay
 .env.overlay.local
 
 # temp directory
