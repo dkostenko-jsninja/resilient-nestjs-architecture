@@ -1,44 +1,56 @@
 version: "3.9"
 
 services:
-  mongo:
-    image: mongo:7
-    container_name: mongo
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo
-      MONGO_INITDB_ROOT_PASSWORD: mongo
-      MONGO_INITDB_DATABASE: test
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - backend
+  # Uncomment if you want to use MongoDB
+  # mongo:
+  #   image: mongo:7
+  #   container_name: mongo
+  #   restart: unless-stopped
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+  #     MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+  #     MONGO_INITDB_DATABASE: ${MONGO_DB}
+  #   ports:
+  #     - "${MONGO_PORT}:27017"
+  #   volumes:
+  #     - mongo_data:/data/db
+  #   networks:
+  #     - backend
+  #     - monitoring
+  #   profiles:
+  #     - deps
 
   postgres:
     image: postgres:16
     container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: test
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - backend
+      - monitoring
+    profiles:
+      - deps
 
   redis:
     image: redis:7.2-alpine
     container_name: redis
-    restart: always
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - monitoring
+      - backend
+    profiles:
+      - deps
 
   rabbitmq:
     build:
@@ -46,13 +58,140 @@ services:
       dockerfile: Dockerfile
     container_name: rabbitmq
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+      - "${RABBITMQ_METRICS_PORT}:15692"
     environment:
-      RABBITMQ_DEFAULT_USER: rabbit
-      RABBITMQ_DEFAULT_PASS: rabbit
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - monitoring
+      - backend
+    profiles:
+      - deps
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.109.0
+    container_name: otel-collector
+    restart: unless-stopped
+    command:
+      [
+        "--config=/etc/otel/config.yml",
+        "--feature-gates=-component.UseLocalHostAsDefaultHost",
+      ]
+    volumes:
+      - ./telemetry/volumes/static/otel-collector-config.yml:/etc/otel/config.yml
+    ports:
+      - "${OTEL_HTTP_PORT}:4318"
+      - "${OTEL_GRPC_PORT}:4317"
+    depends_on:
+      - jaeger
+    networks:
+      - monitoring
+    profiles:
+      - telemetry
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "${JAEGER_PORT}:16686"
+    networks:
+      - monitoring
+    profiles:
+      - telemetry
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+    networks:
+      - monitoring
+    profiles:
+      - telemetry
+
+  # Uncomment if you want to use MongoDB
+  # mongodb-exporter:
+  #   image: percona/mongodb_exporter:0.47.1
+  #   command:
+  #     - "--mongodb.uri=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/admin?sslmode=disable"
+  #   container_name: mongo-exporter
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9216:9216"
+  #   depends_on:
+  #     - mongo
+  #   networks:
+  #     - monitoring
+  #   profiles:
+  #     - telemetry
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    container_name: redis-exporter
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=redis://redis:${REDIS_PORT}
+      - REDIS_EXPORTER_INCL_SYSTEM_METRICS=true
+      - REDIS_EXPORTER_INCL_COMMAND_STATS=true
+      - REDIS_EXPORTER_INCL_LATENCY_METRICS=true
+    ports:
+      - "9121:9121"
+    networks:
+      - monitoring
+    depends_on:
+      - redis
+    profiles:
+      - telemetry
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    volumes:
+      - ./telemetry/volumes/generated/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - postgres-exporter
+      # - mongodb-exporter # Uncomment if you want to use MongoDB
+      - redis-exporter
+    networks:
+      - monitoring
+    profiles:
+      - telemetry
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "${GF_PORT}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - ./telemetry/volumes/static/grafana/provisioning:/etc/grafana/provisioning
+      - ./telemetry/volumes/static/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+      - jaeger
+    networks:
+      - monitoring
+    profiles:
+      - telemetry
 
 volumes:
   mongo_data:
@@ -62,4 +201,6 @@ volumes:
 
 networks:
   backend:
+    driver: bridge
+  monitoring:
     driver: bridge

@@ -1,0 +1,41 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 10000
+    expected_new_traces_per_sec: 500
+    policies:
+      - name: keep_errors
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: keep_10_percent
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+
+exporters:
+  logging:
+    loglevel: info
+  otlphttp:
+    endpoint: http://jaeger:4318
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, tail_sampling]
+      exporters: [logging, otlphttp]

@@ -2,6 +2,7 @@
 /dist
 /node_modules
 /build
+/telemetry/volumes/generated
 
 # Logs
 logs
@@ -37,6 +38,8 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+.env.core
+.env.overlay.local
 
 # temp directory
 .temp

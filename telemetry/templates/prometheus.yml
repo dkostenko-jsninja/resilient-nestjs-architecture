@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'api'
+    metrics_path: ${OTEL_PROMETHEUS_EXPORTER_ENDPOINT}
+    static_configs:
+      - targets: ['${PROMETHEUS_METRICS_TARGET_API}']
+
+  - job_name: 'worker'
+    metrics_path: ${OTEL_PROMETHEUS_EXPORTER_ENDPOINT}
+    static_configs:
+      - targets: ['${PROMETHEUS_METRICS_TARGET_WORKER}']
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+  
+  - job_name: 'mongo'
+    static_configs:
+      - targets: ['mongo-exporter:9216']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: "rabbitmq"
+    metrics_path: /metrics/per-object
+    static_configs:
+      - targets: ["rabbitmq:15692"]
