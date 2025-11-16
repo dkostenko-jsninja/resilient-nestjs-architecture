@@ -22,7 +22,7 @@ const getRoutingKeys = (feature: string, keys: string[]): RabbitMqRoutingKeys =>
   }, {})
 
 @Module({
-  imports: [RabbitMqConfigModule, CircuitBreakerModule.forFeature(RabbitMqFeatureModule.name)],
+  imports: [RabbitMqConfigModule, CircuitBreakerModule.forFeature('rabbitmq')],
 })
 export class RabbitMqFeatureModule {
   static forPublisherFeature({ feature, keys }: RabbitMqFeatureConfig): DynamicModule {

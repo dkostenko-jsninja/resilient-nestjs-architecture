@@ -1,12 +1,13 @@
 import { Global, Module } from '@nestjs/common'
 import { MongoConfigModule } from 'src/configs/mongo/config.module'
+import { CircuitBreakerModule } from '../../circuit-breaker/circuit-breaker.module'
 import { MongoConnectionService } from './mongo-connection.service'
 
 export const MONGO_CONNECTION = 'MONGO_CONNECTION'
 
 @Global()
 @Module({
-  imports: [MongoConfigModule],
+  imports: [MongoConfigModule, CircuitBreakerModule.forFeature('mongodb')],
   providers: [
     MongoConnectionService,
     {
@@ -15,6 +16,6 @@ export const MONGO_CONNECTION = 'MONGO_CONNECTION'
       inject: [MongoConnectionService],
     },
   ],
-  exports: [MONGO_CONNECTION],
+  exports: [MONGO_CONNECTION, CircuitBreakerModule],
 })
 export class MongoModule {}
