@@ -1,0 +1,440 @@
+{
+  "uid": "resilience",
+  "title": "Resilience",
+  "schemaVersion": 38,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "graphTooltip": 2,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request Duration Percentiles (ms)",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(http_server_duration_bucket[10s])) by (le))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_bucket[10s])) by (le))",
+          "legendFormat": "p95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_duration_bucket[10s])) by (le))",
+          "legendFormat": "p99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Rate (per Endpoint)",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_duration_count{http_route!=\"\"}[10s])) by (http_method, http_route)",
+          "legendFormat": "{{http_method}} {{http_route}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Rate (5xx per Endpoint)",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "targets": [
+        {
+          "expr": "(sum(rate(http_server_duration_count{http_status_code=~\"5..\", http_route!=\"\"}[10s])) by (http_method, http_route, http_status_code)) + (0 * sum(rate(http_server_duration_count{http_route!=\"\"}[10s])) by (http_method, http_route, http_status_code))",
+          "legendFormat": "{{http_method}} {{http_route}} {{http_status_code}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "API Health",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "up{job=\"api\"}",
+          "legendFormat": "Process (Up/Down)",
+          "refId": "A"
+        },
+        {
+          "expr": "avg_over_time(nodejs_eventloop_delay_p99{job=\"api\"}[10s]) * 1000",
+          "legendFormat": "Event Loop Delay",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Process (Up/Down)" },
+            "properties": [
+              { "id": "unit", "value": "bool" },
+              { "id": "color", "value": { "mode": "thresholds" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": 0 },
+                    { "color": "green", "value": 1 }
+                  ]
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": { "text": "Down" },
+                      "1": { "text": "Up" }
+                    }
+                  }
+                ]
+              },
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "custom.fillOpacity", "value": 5 },
+              {
+                "matcher": { "id": "byName", "options": "Event Loop Delay" },
+                "properties": [
+                  { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } },
+                  { "id": "custom.axisPlacement", "value": "left" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker Health",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "up{job=\"worker\"}",
+          "legendFormat": "Process (Up/Down)",
+          "refId": "A"
+        },
+        {
+          "expr": "avg_over_time(nodejs_eventloop_delay_p99{job=\"worker\"}[10s]) * 1000",
+          "legendFormat": "Event Loop Delay",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Process (Up/Down)" },
+            "properties": [
+              { "id": "unit", "value": "bool" },
+              { "id": "color", "value": { "mode": "thresholds" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": 0 },
+                    { "color": "green", "value": 1 }
+                  ]
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": { "text": "Down" },
+                      "1": { "text": "Up" }
+                    }
+                  }
+                ]
+              },
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "custom.fillOpacity", "value": 5 },
+              {
+                "matcher": { "id": "byName", "options": "Event Loop Delay" },
+                "properties": [
+                  { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } },
+                  { "id": "custom.axisPlacement", "value": "left" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Postgres Process (Up/Down)",
+      "gridPos": { "x": 0, "y": 14, "w": 4, "h": 6 },
+      "targets": [
+        {
+          "expr": "pg_up",
+          "legendFormat": "State",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool",
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "Down" },
+                "1": { "text": "Up" }
+              }
+            }
+          ]
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "API DB Query Throughput by Operation (ops/s)",
+      "targets": [
+        {
+          "expr": "sum(rate(db_client_operation_duration_count{job=\"api\", db_system=\"postgresql\"}[10s])) by (db_operation_name)",
+          "legendFormat": "{{db_operation_name}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "gridPos": { "x": 4, "y": 14, "w": 10, "h": 6 },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker DB Query Throughput by Operation (ops/s)",
+      "targets": [
+        {
+          "expr": "sum(rate(db_client_operation_duration_count{job=\"worker\", db_system=\"postgresql\"}[10s])) by (db_operation_name)",
+          "legendFormat": "{{db_operation_name}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "gridPos": { "x": 14, "y": 14, "w": 10, "h": 6 },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Redis Process (Up/Down)",
+      "gridPos": { "x": 0, "y": 20, "w": 4, "h": 6 },
+      "targets": [
+        {
+          "expr": "redis_up",
+          "legendFormat": "State",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool",
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "Down" },
+                "1": { "text": "Up" }
+              }
+            }
+          ]
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Redis Commands per Second",
+      "gridPos": { "x": 4, "y": 20, "w": 10, "h": 6 },
+      "targets": [
+        {
+          "expr": "rate(redis_commands_processed_total[10s])",
+          "legendFormat": "commands/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Redis Cache Hit Ratio",
+      "gridPos": { "x": 14, "y": 20, "w": 10, "h": 6 },
+      "targets": [
+        {
+          "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)",
+          "legendFormat": "hit ratio",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0.0 },
+              { "color": "orange", "value": 0.7 },
+              { "color": "green", "value": 0.9 }
+            ]
+          }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "RabbitMQ Process (Up/Down)",
+      "gridPos": { "x": 0, "y": 26, "w": 4, "h": 6 },
+      "targets": [
+        {
+          "expr": "up{job=\"rabbitmq\"}",
+          "legendFormat": "State",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool",
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "Down" },
+                "1": { "text": "Up" }
+              }
+            }
+          ]
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "RabbitMQ Throughput (msg/s)",
+      "gridPos": { "x": 4, "y": 26, "w": 10, "h": 6 },
+      "targets": [
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_delivered_total[10s]))",
+          "legendFormat": "delivered",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_received_total[10s]))",
+          "legendFormat": "received",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_acknowledged_total[10s]))",
+          "legendFormat": "acknowledged",
+          "refId": "C"
+        },
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_dead_lettered_rejected_total{queue_type=\"rabbit_classic_queue\",dead_letter_strategy=\"at_most_once\"}[10s]))",
+          "legendFormat": "rejected",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "msg/s" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "RabbitMQ Messages",
+      "gridPos": { "x": 14, "y": 26, "w": 10, "h": 6 },
+      "targets": [
+        {
+          "expr": "rabbitmq_queue_messages_ready",
+          "legendFormat": "{{queue}} (ready)",
+          "refId": "A"
+        },
+        {
+          "expr": "rabbitmq_queue_messages_unacked",
+          "legendFormat": "{{queue}} (unacked)",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "msg" }
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    }
+  ]
+}
