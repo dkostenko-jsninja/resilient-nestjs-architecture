@@ -1,8 +1,11 @@
 import { Logger } from '@nestjs/common'
+import { Meter, metrics } from '@opentelemetry/api'
 import { getNodeAutoInstrumentations, InstrumentationConfigMap } from '@opentelemetry/auto-instrumentations-node'
 import { PrometheusExporter } from '@opentelemetry/exporter-prometheus'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { resourceFromAttributes } from '@opentelemetry/resources'
 import { NodeSDK, NodeSDKConfiguration } from '@opentelemetry/sdk-node'
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions'
 import { configFactory } from 'src/configs/telemetry/config.factory'
 
 const {
@@ -14,11 +17,13 @@ const {
   prometheusExporterEndpoint,
 } = configFactory()
 
+let meter: Meter
+
 async function initTelemetry(serviceName: string, metricsPort: number, instrumentationsConfigMap: InstrumentationConfigMap) {
   const logger = new Logger(`Telemetry ${serviceName}`)
 
   const configuration: Partial<NodeSDKConfiguration> = {
-    serviceName,
+    resource: resourceFromAttributes({ [ATTR_SERVICE_NAME]: serviceName }),
     metricReaders: [new PrometheusExporter({ port: metricsPort, endpoint: prometheusExporterEndpoint })],
     traceExporter: new OTLPTraceExporter({ url: traceExporterUrl }),
     instrumentations: [getNodeAutoInstrumentations(instrumentationsConfigMap)],
@@ -34,6 +39,8 @@ async function initTelemetry(serviceName: string, metricsPort: number, instrumen
     return
   }
 
+  meter = metrics.getMeter(serviceName)
+
   async function shutdown() {
     await sdk.shutdown()
     logger.log('Shutdown complete')
@@ -44,6 +51,8 @@ async function initTelemetry(serviceName: string, metricsPort: number, instrumen
   process.on('SIGINT', shutdown)
   process.on('SIGHUP', shutdown)
 }
+
+export { meter }
 
 export async function initMainTelemetry() {
   await initTelemetry(serviceApiName, prometheusExporterApiPort, {

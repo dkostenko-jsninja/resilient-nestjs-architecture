@@ -55,7 +55,7 @@
       "targets": [
         {
           "expr": "rate(redis_commands_processed_total[10s])",
-          "legendFormat": "commands/s",
+          "legendFormat": "ops/s",
           "refId": "A"
         }
       ],
@@ -83,7 +83,7 @@
       "targets": [
         {
           "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)",
-          "legendFormat": "hit ratio",
+          "legendFormat": "Hit Ratio",
           "refId": "A"
         }
       ],
@@ -98,6 +98,80 @@
               { "color": "green", "value": 0.9 }
             ]
           }
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "API Circuit",
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "circuit_breaker_state{job=\"api\", dependency=\"redis\"}",
+          "legendFormat": "Circuit",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "max": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "Closed" },
+                "1": { "text": "Half-Open" },
+                "2": { "text": "Open" }
+              }
+            }
+          ]
+        }
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker Circuit",
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "expr": "circuit_breaker_state{job=\"worker\", dependency=\"redis\"}",
+          "legendFormat": "Circuit",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "max": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 2 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "Closed" },
+                "1": { "text": "Half-Open" },
+                "2": { "text": "Open" }
+              }
+            }
+          ]
         }
       },
       "options": { "tooltip": { "mode": "multi" } }

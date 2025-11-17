@@ -80,27 +80,72 @@
       "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
       "targets": [
         {
-          "expr": "sum(rate(rabbitmq_global_messages_delivered_total[10s]))",
-          "legendFormat": "delivered",
+          "expr": "circuit_breaker_state{job=\"api\", dependency=\"rabbitmq\"}",
+          "legendFormat": "API Circuit",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(rabbitmq_global_messages_received_total[10s]))",
-          "legendFormat": "received",
+          "expr": "sum(rate(rabbitmq_global_messages_delivered_total[10s]))",
+          "legendFormat": "Delivered",
           "refId": "B"
         },
         {
-          "expr": "sum(rate(rabbitmq_global_messages_acknowledged_total[10s]))",
-          "legendFormat": "acknowledged",
+          "expr": "sum(rate(rabbitmq_global_messages_received_total[10s]))",
+          "legendFormat": "Received",
           "refId": "C"
         },
         {
-          "expr": "sum(rate(rabbitmq_global_messages_dead_lettered_rejected_total{queue_type=\"rabbit_classic_queue\",dead_letter_strategy=\"at_most_once\"}[10s]))",
-          "legendFormat": "rejected",
+          "expr": "sum(rate(rabbitmq_global_messages_acknowledged_total[10s]))",
+          "legendFormat": "Acknowledged",
           "refId": "D"
+        },
+        {
+          "expr": "sum(rate(rabbitmq_global_messages_dead_lettered_rejected_total{queue_type=\"rabbit_classic_queue\",dead_letter_strategy=\"at_most_once\"}[10s]))",
+          "legendFormat": "Rejected",
+          "refId": "E"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "msg/s" } },
+      "fieldConfig": {
+        "defaults": { "unit": "msg/s" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "API Circuit" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "max", "value": 2 },
+              { "id": "decimals", "value": "0" },
+              { "id": "color", "value": { "mode": "thresholds" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": 0 },
+                    { "color": "orange", "value": 1 },
+                    { "color": "red", "value": 2 }
+                  ]
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": { "text": "Closed" },
+                      "1": { "text": "Half-Open" },
+                      "2": { "text": "Open" }
+                    }
+                  }
+                ]
+              },
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "custom.fillOpacity", "value": 5 },
+              { "id": "custom.showPoints", "value": "never" }
+            ]
+          }
+        ]
+      },
       "options": { "tooltip": { "mode": "multi" } }
     },
     {

@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common'
 import Redis from 'ioredis'
-import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/application/cache.service'
+import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/application/cache/cache.service'
 import { RedisConfigService } from 'src/configs/redis/config.service'
 
 @Injectable()

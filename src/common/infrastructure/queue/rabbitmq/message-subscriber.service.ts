@@ -1,6 +1,6 @@
 import { Channel, ConsumeMessage } from 'amqplib'
-import { Message } from 'src/common/application/message'
-import { MessageQueue, MessageSubscriberService } from 'src/common/application/message-subscriber.service'
+import { Message } from 'src/common/application/messaging/message'
+import { MessageQueue, MessageSubscriberService } from 'src/common/application/messaging/message-subscriber.service'
 import { assertMessageHeaders } from './message-headers'
 import { RabbitMqRoutingKeys } from './rabbitmq.types'
 

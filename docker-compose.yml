@@ -18,9 +18,10 @@ services:
       - otel-collector
     ports:
       - "${PORT}:${PORT}"
-      - "${OTEL_PROMETHEUS_EXPORTER_API_PORT}:${OTEL_PROMETHEUS_EXPORTER_API_PORT}"
+      - "${OTEL_PROMETHEUS_EXPORTER_API_PORT}:9464"
     networks:
       - backend
+      - monitoring
     profiles:
       - core
 
@@ -40,9 +41,10 @@ services:
       - rabbitmq
       - otel-collector
     ports:
-      - "${OTEL_PROMETHEUS_EXPORTER_WORKER_PORT}:${OTEL_PROMETHEUS_EXPORTER_WORKER_PORT}"
+      - "${OTEL_PROMETHEUS_EXPORTER_WORKER_PORT}:9465"
     networks:
       - backend
+      - monitoring
     profiles:
       - core
 
@@ -152,7 +154,7 @@ services:
       - telemetry
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter
+    image: prometheuscommunity/postgres-exporter:v0.18.1
     container_name: postgres-exporter
     restart: unless-stopped
     environment:
@@ -204,6 +206,9 @@ services:
     image: prom/prometheus:v3.7.3
     container_name: prometheus
     restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --enable-feature=otlp-write-receive
     ports:
       - "${PROMETHEUS_PORT}:9090"
     volumes:

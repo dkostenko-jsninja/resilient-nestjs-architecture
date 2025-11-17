@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common'
-import { CACHE_SERVICE, CacheService } from 'src/common/application/cache.service'
+import { CACHE_SERVICE, CacheService } from 'src/common/application/cache/cache.service'
 import { RedisConfigModule } from 'src/configs/redis/config.module'
 import { CircuitBreakerModule } from '../../circuit-breaker/circuit-breaker.module'
 import { withCircuitBreaker } from '../../circuit-breaker/circuit-breaker.provider'

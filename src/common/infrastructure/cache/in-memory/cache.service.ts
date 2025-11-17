@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/application/cache.service'
+import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/application/cache/cache.service'
 
 interface CacheEntry<T = unknown> {
   value: T
