@@ -1,15 +1,16 @@
 import { Inject, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { MESSAGE_SUBSCRIBER_SERVICE, MessageSubscriberService } from 'src/common/application/messaging/message-subscriber.service'
 import { RabbitMqFeatureModule } from 'src/common/infrastructure/queue/rabbitmq/rabbitmq.module'
-import { TaskMessageProcessorService } from './application/task-message-processor.service'
-import { TaskMessageStateService } from './application/task-message-state.service'
+import { TaskMessageProcessorService } from './application/messaging/task-message-processor.service'
+import { TaskMessageStateService } from './application/messaging/task-message-state.service'
+import { TaskCacheService } from './application/task-cache.service'
 import { TaskService } from './application/task.service'
 import { TASK_QUEUE_CONFIG } from './infrastructure/queue/rabbitmq/task-queue.config'
 import { TasksRepositoryModule } from './tasks-repository.module'
 
 @Module({
   imports: [RabbitMqFeatureModule.forSubscriberFeature(TASK_QUEUE_CONFIG), TasksRepositoryModule],
-  providers: [TaskMessageStateService, TaskMessageProcessorService, TaskService],
+  providers: [TaskMessageStateService, TaskMessageProcessorService, TaskCacheService, TaskService],
 })
 export class TasksWorkerModule implements OnModuleInit, OnModuleDestroy {
   constructor(

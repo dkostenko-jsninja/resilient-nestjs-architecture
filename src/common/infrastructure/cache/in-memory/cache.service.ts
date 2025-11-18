@@ -39,7 +39,7 @@ export class InMemoryCacheService implements CacheService {
     }
   }
 
-  async remove(key: string): Promise<void> {
+  async del(key: string): Promise<void> {
     this.cache.delete(key)
   }
 

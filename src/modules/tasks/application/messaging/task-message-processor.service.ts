@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common'
 import { Message } from 'src/common/application/messaging/message'
 import { MessageQueue } from 'src/common/application/messaging/message-subscriber.service'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
-import { Task } from '../domain/task.entity'
+import { Task } from '../../domain/task.entity'
 import { TaskMessage, TaskMessageStatus } from './task-message'
 import { TaskMessageStateService } from './task-message-state.service'
-import { TaskService } from './task.service'
+import { TaskService } from '../task.service'
 
 @Injectable()
 export class TaskMessageProcessorService {

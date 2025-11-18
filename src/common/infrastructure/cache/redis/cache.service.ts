@@ -32,7 +32,7 @@ export class RedisCacheService implements OnApplicationShutdown, CacheService {
     try {
       return JSON.parse(raw)
     } catch {
-      await this.remove(key)
+      await this.del(key)
     }
 
     return null
@@ -93,7 +93,7 @@ export class RedisCacheService implements OnApplicationShutdown, CacheService {
     return result === 'OK'
   }
 
-  async remove(key: string): Promise<void> {
+  async del(key: string): Promise<void> {
     await this.redis.del(key)
   }
 }

@@ -8,5 +8,5 @@ export interface CacheService {
   set<T>(key: string, value: T): Promise<boolean>
   set<T>(key: string, value: T, writeMode: CacheWriteMode): Promise<boolean>
   set<T>(key: string, value: T, writeMode: CacheWriteMode, ttlMode: CacheTtlMode, ttl: number): Promise<boolean>
-  remove(key: string): Promise<void>
+  del(key: string): Promise<void>
 }
