@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { randomUUID } from 'crypto'
-import { MESSAGE_PUBLISHER_SERVICE, MessagePublisherService } from 'src/common/application/message-publisher.service'
+import { MESSAGE_PUBLISHER_SERVICE, MessagePublisherService } from 'src/common/application/messaging/message-publisher.service'
 import { TaskMessageInput, TaskMessageState, TaskMessageStatus } from './task-message'
 import { TaskMessageStateService } from './task-message-state.service'
 

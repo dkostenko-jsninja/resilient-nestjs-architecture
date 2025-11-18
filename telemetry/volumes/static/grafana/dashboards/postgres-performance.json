@@ -1,0 +1,217 @@
+{
+  "uid": "postgres_performance",
+  "title": "Postgres Performance",
+  "schemaVersion": 38,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Postgres Process (Up/Down)",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 4 },
+      "targets": [{ "expr": "pg_up", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "Down" },
+                "1": { "text": "Up" }
+              }
+            }
+          ]
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "type": "timeseries",
+      "title": "API DB Query Duration (p95, ms)",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "1000 * histogram_quantile(0.95, sum(rate(db_client_operation_duration_bucket{job=\"api\", db_system=\"postgresql\"}[10s])) by (le, db_operation_name))",
+          "legendFormat": "p95 {{db_operation_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker DB Query Duration (p95, ms)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "1000 * histogram_quantile(0.95, sum(rate(db_client_operation_duration_bucket{job=\"worker\", db_system=\"postgresql\"}[10s])) by (le, db_operation_name))",
+          "legendFormat": "p95 {{db_operation_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "API DB Query Throughput by Operation (ops/s)",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "circuit_breaker_state{job=\"api\", dependency=\"postgresql\"}",
+          "legendFormat": "Circuit",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(db_client_operation_duration_count{job=\"api\", db_system=\"postgresql\"}[10s])) by (db_operation_name)",
+          "legendFormat": "{{db_operation_name}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Circuit" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "max", "value": 2 },
+              { "id": "decimals", "value": "0" },
+              { "id": "color", "value": { "mode": "thresholds" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": 0 },
+                    { "color": "orange", "value": 1 },
+                    { "color": "red", "value": 2 }
+                  ]
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": { "text": "Closed" },
+                      "1": { "text": "Half-Open" },
+                      "2": { "text": "Open" }
+                    }
+                  }
+                ]
+              },
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "custom.fillOpacity", "value": 5 },
+              { "id": "custom.showPoints", "value": "never" }
+            ]
+          }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker DB Query Throughput by Operation (ops/s)",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "circuit_breaker_state{job=\"worker\", dependency=\"postgresql\"}",
+          "legendFormat": "Circuit",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(db_client_operation_duration_count{job=\"worker\", db_system=\"postgresql\"}[10s])) by (db_operation_name)",
+          "legendFormat": "{{db_operation_name}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Circuit" },
+            "properties": [
+              { "id": "unit", "value": "none" },
+              { "id": "max", "value": 2 },
+              { "id": "decimals", "value": "0" },
+              { "id": "color", "value": { "mode": "thresholds" } },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": 0 },
+                    { "color": "orange", "value": 1 },
+                    { "color": "red", "value": 2 }
+                  ]
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": { "text": "Closed" },
+                      "1": { "text": "Half-Open" },
+                      "2": { "text": "Open" }
+                    }
+                  }
+                ]
+              },
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "custom.fillOpacity", "value": 5 },
+              { "id": "custom.showPoints", "value": "never" }
+            ]
+          }
+        ]
+      },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "API DB Connection Pool (used vs idle)",
+      "targets": [
+        {
+          "expr": "db_client_connection_count{job=\"api\", db_client_connection_state=\"used\", db_system=\"postgresql\"}",
+          "legendFormat": "Used"
+        },
+        {
+          "expr": "db_client_connection_count{job=\"api\", db_client_connection_state=\"idle\", db_system=\"postgresql\"}",
+          "legendFormat": "Idle"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "connections" } },
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Worker DB Connection Pool (used vs idle)",
+      "targets": [
+        {
+          "expr": "db_client_connection_count{job=\"worker\", db_client_connection_state=\"used\", db_system=\"postgresql\"}",
+          "legendFormat": "Used"
+        },
+        {
+          "expr": "db_client_connection_count{job=\"worker\", db_client_connection_state=\"idle\", db_system=\"postgresql\"}",
+          "legendFormat": "Idle"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "connections" } },
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
+      "options": { "tooltip": { "mode": "multi" } }
+    }
+  ]
+}

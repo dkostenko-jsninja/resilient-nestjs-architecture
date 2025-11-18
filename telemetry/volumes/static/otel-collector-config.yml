@@ -1,0 +1,77 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 10000
+    expected_new_traces_per_sec: 500
+    policies:
+      - name: keep_errors
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: keep_10_percent
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+
+  filter/api:
+    metrics:
+      include:
+        match_type: regexp
+        resource_attributes:
+          - key: service.name
+            value: "^api$"
+
+  filter/worker:
+    metrics:
+      include:
+        match_type: regexp
+        resource_attributes:
+          - key: service.name
+            value: "^worker$"
+
+exporters:
+  logging:
+    loglevel: info
+
+  otlphttp:
+    endpoint: http://jaeger:4318
+    tls:
+      insecure: true
+
+  prometheus/api:
+    endpoint: "0.0.0.0:9464"
+    namespace: api
+
+  prometheus/worker:
+    endpoint: "0.0.0.0:9465"
+    namespace: worker
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch, tail_sampling]
+      exporters: [logging, otlphttp]
+
+    metrics/api:
+      receivers: [otlp]
+      processors: [filter/worker, batch]
+      exporters: [prometheus/api]
+
+    metrics/worker:
+      receivers: [otlp]
+      processors: [filter/worker, batch]
+      exporters: [prometheus/worker]

@@ -1,8 +1,11 @@
 import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import CircuitBreaker from 'opossum'
+import { StateMetricService } from 'src/common/application/metrics/state-metric.service'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
+import { CIRCUIT_BREAKER_METRIC } from './../telemetry/telemetry.constants'
 
-export const CIRCUIT_BREAKER_NAME = 'CIRCUIT_BREAKER_NAME'
+export const CIRCUIT_BREAKER_NAME = Symbol('CIRCUIT_BREAKER_NAME')
+export const CIRCUIT_BREAKER_STATE_METRIC_SERVICE = Symbol('CIRCUIT_BREAKER_STATE_METRIC_SERVICE')
 
 @Injectable()
 export class CircuitBreakerService implements OnModuleDestroy {
@@ -18,12 +21,25 @@ export class CircuitBreakerService implements OnModuleDestroy {
     allowWarmUp: true,
   }
 
-  constructor(@Inject(CIRCUIT_BREAKER_NAME) private readonly name: string) {
+  constructor(
+    @Inject(CIRCUIT_BREAKER_NAME) private readonly name: string,
+    @Inject(CIRCUIT_BREAKER_STATE_METRIC_SERVICE) private readonly stateMetric: StateMetricService<number>,
+  ) {
+    this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.CLOSED)
     this.logger = new Logger(`${this.name} Circuit`)
     this.breaker = new CircuitBreaker((operation) => operation(), this.breakerOptions)
-    this.breaker.on('open', () => this.logger.warn('OPEN'))
-    this.breaker.on('halfOpen', () => this.logger.log('HALF-OPEN'))
-    this.breaker.on('close', () => this.logger.log('CLOSED'))
+    this.breaker.on('open', () => {
+      this.logger.warn('OPEN')
+      this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.OPEN)
+    })
+    this.breaker.on('halfOpen', () => {
+      this.logger.log('HALF-OPEN')
+      this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.HALF_OPEN)
+    })
+    this.breaker.on('close', () => {
+      this.logger.log('CLOSED')
+      this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.CLOSED)
+    })
     this.breaker.on('timeout', () => this.logger.warn('Operation timed out'))
     this.breaker.on('reject', () => this.logger.warn('Operation rejected (breaker open)'))
     this.breaker.on('failure', (err: Error) => this.logger.warn(`Operation failure: ${err.message}`))

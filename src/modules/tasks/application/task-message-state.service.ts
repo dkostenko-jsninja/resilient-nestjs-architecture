@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { CACHE_SERVICE, CacheService } from 'src/common/application/cache.service'
+import { CACHE_SERVICE, CacheService } from 'src/common/application/cache/cache.service'
 import { TaskMessageState } from './task-message'
 
 @Injectable()

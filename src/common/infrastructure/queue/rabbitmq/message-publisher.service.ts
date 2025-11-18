@@ -1,7 +1,7 @@
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 import { randomUUID } from 'crypto'
-import { Message } from 'src/common/application/message'
-import { MessagePublisherService, MessagePublishOptions } from 'src/common/application/message-publisher.service'
+import { Message } from 'src/common/application/messaging/message'
+import { MessagePublisherService, MessagePublishOptions } from 'src/common/application/messaging/message-publisher.service'
 import { MessageHeaders } from './message-headers'
 import { RabbitMqRoutingKeys } from './rabbitmq.types'
 

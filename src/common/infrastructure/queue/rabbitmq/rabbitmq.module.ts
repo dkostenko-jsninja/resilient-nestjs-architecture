@@ -1,8 +1,8 @@
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq'
 import { DynamicModule, Module, Provider } from '@nestjs/common'
 import { Channel } from 'amqplib'
-import { MESSAGE_PUBLISHER_SERVICE } from 'src/common/application/message-publisher.service'
-import { MESSAGE_SUBSCRIBER_SERVICE } from 'src/common/application/message-subscriber.service'
+import { MESSAGE_PUBLISHER_SERVICE } from 'src/common/application/messaging/message-publisher.service'
+import { MESSAGE_SUBSCRIBER_SERVICE } from 'src/common/application/messaging/message-subscriber.service'
 import { RabbitMqConfigModule } from 'src/configs/rabbitmq/config.module'
 import { CircuitBreakerModule } from '../../circuit-breaker/circuit-breaker.module'
 import { withCircuitBreaker } from '../../circuit-breaker/circuit-breaker.provider'
@@ -22,7 +22,7 @@ const getRoutingKeys = (feature: string, keys: string[]): RabbitMqRoutingKeys =>
   }, {})
 
 @Module({
-  imports: [RabbitMqConfigModule, CircuitBreakerModule.forFeature(RabbitMqFeatureModule.name)],
+  imports: [RabbitMqConfigModule, CircuitBreakerModule.forFeature('rabbitmq')],
 })
 export class RabbitMqFeatureModule {
   static forPublisherFeature({ feature, keys }: RabbitMqFeatureConfig): DynamicModule {
