@@ -40,7 +40,7 @@
       "targets": [
         {
           "expr": "1000 * histogram_quantile(0.95, sum(rate(db_client_operation_duration_bucket{job=\"api\", db_system=\"postgresql\"}[10s])) by (le, db_operation_name))",
-          "legendFormat": "p95 {{db_operation_name}}",
+          "legendFormat": "{{db_operation_name}}",
           "refId": "A"
         }
       ],
@@ -54,7 +54,7 @@
       "targets": [
         {
           "expr": "1000 * histogram_quantile(0.95, sum(rate(db_client_operation_duration_bucket{job=\"worker\", db_system=\"postgresql\"}[10s])) by (le, db_operation_name))",
-          "legendFormat": "p95 {{db_operation_name}}",
+          "legendFormat": "{{db_operation_name}}",
           "refId": "A"
         }
       ],

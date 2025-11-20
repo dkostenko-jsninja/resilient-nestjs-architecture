@@ -92,7 +92,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
   }
 
   private async releaseClaim(cacheKey: string): Promise<void> {
-    await this.cache.remove(`lock:${cacheKey}`)
+    await this.cache.del(`lock:${cacheKey}`)
   }
 
   private async persistResponse(cacheKey: string, response: Response, body: unknown): Promise<void> {

@@ -9,7 +9,7 @@
     {
       "type": "timeseries",
       "title": "Request Duration Percentiles (ms)",
-      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 8 },
       "targets": [
         {
           "expr": "histogram_quantile(0.5, sum(rate(http_server_duration_bucket[10s])) by (le))",
@@ -33,7 +33,7 @@
     {
       "type": "timeseries",
       "title": "Request Rate (per Endpoint)",
-      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 8 },
       "targets": [
         {
           "expr": "sum(rate(http_server_duration_count{http_route!=\"\"}[10s])) by (http_method, http_route)",
@@ -47,7 +47,7 @@
     {
       "type": "timeseries",
       "title": "Error Rate (5xx per Endpoint)",
-      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 8 },
       "targets": [
         {
           "expr": "(sum(rate(http_server_duration_count{http_status_code=~\"5..\", http_route!=\"\"}[10s])) by (http_method, http_route, http_status_code)) + (0 * sum(rate(http_server_duration_count{http_route!=\"\"}[10s])) by (http_method, http_route, http_status_code))",
@@ -56,6 +56,26 @@
         }
       ],
       "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache Hit Ratio per Entity",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 8 },
+      "targets": [
+        {
+          "expr": "(sum by (entity, scope) (rate(cache_hits_total[10s]))) / clamp_min((sum by (entity, scope) (rate(cache_hits_total[10s]))) + (sum by (entity, scope) (rate(cache_misses_total[10s])) or on (entity, scope) (0 * sum by (entity, scope) (rate(cache_hits_total[10s])))), 1e-9)",
+          "legendFormat": "{{entity}} {{scope}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      },
       "options": { "tooltip": { "mode": "multi" } }
     },
     {
@@ -241,7 +261,7 @@
     },
     {
       "type": "timeseries",
-      "title": "API DB Query Throughput by Operation (ops/s)",
+      "title": "API DB Query Duration (p95, ms)",
       "gridPos": { "x": 4, "y": 14, "w": 10, "h": 6 },
       "targets": [
         {
@@ -250,13 +270,13 @@
           "refId": "A"
         },
         {
-          "expr": "sum(rate(db_client_operation_duration_count{job=\"api\", db_system=\"postgresql\"}[10s])) by (db_operation_name)",
+          "expr": "1000 * histogram_quantile(0.95, sum(rate(db_client_operation_duration_bucket{job=\"api\", db_system=\"postgresql\"}[10s])) by (le, db_operation_name))",
           "legendFormat": "{{db_operation_name}}",
           "refId": "B"
         }
       ],
       "fieldConfig": {
-        "defaults": { "unit": "ops" },
+        "defaults": { "unit": "ms" },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "Circuit" },
@@ -300,7 +320,7 @@
     },
     {
       "type": "timeseries",
-      "title": "Worker DB Query Throughput by Operation (ops/s)",
+      "title": "Worker DB Query Duration (p95, ms)",
       "gridPos": { "x": 14, "y": 14, "w": 10, "h": 6 },
       "targets": [
         {
@@ -309,13 +329,13 @@
           "refId": "A"
         },
         {
-          "expr": "sum(rate(db_client_operation_duration_count{job=\"worker\", db_system=\"postgresql\"}[10s])) by (db_operation_name)",
+          "expr": "1000 * histogram_quantile(0.95, sum(rate(db_client_operation_duration_bucket{job=\"worker\", db_system=\"postgresql\"}[10s])) by (le, db_operation_name))",
           "legendFormat": "{{db_operation_name}}",
           "refId": "B"
         }
       ],
       "fieldConfig": {
-        "defaults": { "unit": "ops" },
+        "defaults": { "unit": "ms" },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "Circuit" },
@@ -402,39 +422,22 @@
     },
     {
       "type": "timeseries",
-      "title": "Redis Commands per Second",
-      "gridPos": { "x": 4, "y": 20, "w": 5, "h": 6 },
+      "title": "Redis Command Latency (p95, ms)",
+      "gridPos": { "x": 4, "y": 20, "w": 10, "h": 6 },
       "targets": [
         {
-          "expr": "rate(redis_commands_processed_total[10s])",
-          "legendFormat": "ops/s",
-          "refId": "C"
-        }
-      ],
-      "fieldConfig": { "defaults": { "unit": "ops" } },
-      "options": { "tooltip": { "mode": "multi" } }
-    },
-    {
-      "type": "timeseries",
-      "title": "Redis Cache Hit Ratio",
-      "gridPos": { "x": 9, "y": 20, "w": 5, "h": 6 },
-      "targets": [
-        {
-          "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total)",
-          "legendFormat": "Hit Ratio",
+          "expr": "histogram_quantile(0.95, sum(rate(redis_commands_latencies_usec_bucket[10s])) by (le)) / 1000",
+          "legendFormat": "Latency",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": 0.0 },
-              { "color": "orange", "value": 0.7 },
-              { "color": "green", "value": 0.9 }
-            ]
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
           }
         }
       },

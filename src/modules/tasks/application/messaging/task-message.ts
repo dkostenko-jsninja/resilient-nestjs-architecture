@@ -1,4 +1,4 @@
-import { CreateTaskInput, Task, UpdateTaskInput } from '../domain/task.entity'
+import { CreateTaskInput, Task, UpdateTaskInput } from '../../domain/task.entity'
 
 export enum TaskMessageStatus {
   PENDING = 'pending',
