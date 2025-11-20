@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import CircuitBreaker from 'opossum'
 import { StateMetricService } from 'src/common/application/metrics/state-metric.service'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
-import { CIRCUIT_BREAKER_METRIC } from './../telemetry/telemetry.constants'
 
 export const CIRCUIT_BREAKER_NAME = Symbol('CIRCUIT_BREAKER_NAME')
 export const CIRCUIT_BREAKER_STATE_METRIC_SERVICE = Symbol('CIRCUIT_BREAKER_STATE_METRIC_SERVICE')
@@ -21,24 +20,30 @@ export class CircuitBreakerService implements OnModuleDestroy {
     allowWarmUp: true,
   }
 
+  private readonly state = {
+    closed: 0,
+    halfOpen: 1,
+    open: 2,
+  }
+
   constructor(
     @Inject(CIRCUIT_BREAKER_NAME) private readonly name: string,
-    @Inject(CIRCUIT_BREAKER_STATE_METRIC_SERVICE) private readonly stateMetric: StateMetricService<number>,
+    @Inject(CIRCUIT_BREAKER_STATE_METRIC_SERVICE) private readonly stateMetric: StateMetricService,
   ) {
-    this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.CLOSED)
+    this.stateMetric.set(this.state.closed)
     this.logger = new Logger(`${this.name} Circuit`)
     this.breaker = new CircuitBreaker((operation) => operation(), this.breakerOptions)
     this.breaker.on('open', () => {
       this.logger.warn('OPEN')
-      this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.OPEN)
+      this.stateMetric.set(this.state.open)
     })
     this.breaker.on('halfOpen', () => {
       this.logger.log('HALF-OPEN')
-      this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.HALF_OPEN)
+      this.stateMetric.set(this.state.halfOpen)
     })
     this.breaker.on('close', () => {
       this.logger.log('CLOSED')
-      this.stateMetric.setState(CIRCUIT_BREAKER_METRIC.STATES.CLOSED)
+      this.stateMetric.set(this.state.closed)
     })
     this.breaker.on('timeout', () => this.logger.warn('Operation timed out'))
     this.breaker.on('reject', () => this.logger.warn('Operation rejected (breaker open)'))

@@ -178,12 +178,12 @@
     },
     {
       "type": "timeseries",
-      "title": "API GC Duration by Type (ms)",
+      "title": "API GC Duration by Type (p95, ms)",
       "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
       "targets": [
         {
           "expr": "1000 * histogram_quantile(0.95, sum(rate(v8js_gc_duration_bucket{job=\"api\"}[10s])) by (le, v8js_gc_type))",
-          "legendFormat": "p95 {{v8js_gc_type}}",
+          "legendFormat": "{{v8js_gc_type}}",
           "refId": "A"
         }
       ],
@@ -192,12 +192,12 @@
     },
     {
       "type": "timeseries",
-      "title": "Worker GC Duration by Type (ms)",
+      "title": "Worker GC Duration by Type (p95, ms)",
       "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
       "targets": [
         {
           "expr": "1000 * histogram_quantile(0.95, sum(rate(v8js_gc_duration_bucket{job=\"worker\"}[10s])) by (le, v8js_gc_type))",
-          "legendFormat": "p95 {{v8js_gc_type}}",
+          "legendFormat": "{{v8js_gc_type}}",
           "refId": "A"
         }
       ],

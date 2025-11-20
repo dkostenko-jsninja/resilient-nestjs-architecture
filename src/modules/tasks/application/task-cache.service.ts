@@ -1,21 +1,40 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { CACHE_SERVICE, CacheService } from 'src/common/application/cache/cache.service'
+import { CacheMetricService } from 'src/common/application/cache/cache-metric.service'
 import { Task } from '../domain/task.entity'
+
+export type TaskCacheScenario = 'get-one' | 'get-all'
 
 @Injectable()
 export class TaskCacheService {
   private readonly TTL = 3600
 
-  constructor(@Inject(CACHE_SERVICE) private readonly cacheService: CacheService) {}
+  constructor(
+    @Inject(CACHE_SERVICE)
+    private readonly cacheService: CacheService,
+    private readonly cacheMetricService: CacheMetricService<TaskCacheScenario>,
+  ) {}
 
   async getAll(): Promise<Task[] | null> {
     const tasks = await this.cacheService.get<Task[]>(this.buildCacheKey('all'))
-    return tasks ? tasks.map((task) => this.deserializeOne(task)) : null
+    if (tasks) {
+      this.cacheMetricService.hit('get-all')
+      return tasks.map((task) => this.deserializeOne(task))
+    }
+
+    this.cacheMetricService.miss('get-all')
+    return null
   }
 
   async getOne(id: string): Promise<Task | null> {
     const task = await this.cacheService.get<Task>(this.buildCacheKey(id))
-    return task ? this.deserializeOne(task) : null
+    if (task) {
+      this.cacheMetricService.hit('get-one')
+      return this.deserializeOne(task)
+    }
+
+    this.cacheMetricService.miss('get-one')
+    return null
   }
 
   setAll(tasks: Task[]): void {
