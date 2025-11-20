@@ -42,4 +42,8 @@ export abstract class CommonMongoRepository<
     const result = await this.model.findByIdAndDelete(id).exec()
     return !!result
   }
+
+  async deleteAll(): Promise<void> {
+    await this.model.deleteMany().exec()
+  }
 }

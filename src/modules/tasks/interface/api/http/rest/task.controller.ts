@@ -75,6 +75,12 @@ export class TaskController {
     }
   }
 
+  @Delete()
+  async deleteAll(@Res({ passthrough: true }) res: Response) {
+    await this.taskService.deleteAll()
+    res.status(HttpStatus.NO_CONTENT)
+  }
+
   @Delete(':id')
   async deleteOne(@Param() params: TaskIdParamDto, @Res({ passthrough: true }) res: Response) {
     try {
