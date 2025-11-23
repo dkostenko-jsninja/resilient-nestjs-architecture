@@ -55,6 +55,7 @@
     "@opentelemetry/sdk-trace-base": "^2.2.0",
     "@opentelemetry/semantic-conventions": "^1.37.0",
     "amqplib": "^0.10.9",
+    "cbor-x": "^1.6.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "ioredis": "^5.8.2",

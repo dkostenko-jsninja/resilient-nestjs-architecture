@@ -1,7 +1,14 @@
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common'
+import { Decoder, Encoder } from 'cbor-x'
 import Redis from 'ioredis'
 import { CacheService, CacheTtlMode, CacheWriteMode } from 'src/common/application/cache/cache.service'
 import { RedisConfigService } from 'src/configs/redis/config.service'
+
+const encoder = new Encoder({
+  useRecords: true,
+  bundleStrings: true,
+})
+const decoder = new Decoder()
 
 @Injectable()
 export class RedisCacheService implements OnApplicationShutdown, CacheService {
@@ -23,15 +30,16 @@ export class RedisCacheService implements OnApplicationShutdown, CacheService {
   }
 
   async get<T>(key: string): Promise<T | null> {
-    const raw = await this.redis.get(key)
+    const raw = await this.redis.getBuffer(key)
 
     if (!raw) {
       return null
     }
 
     try {
-      return JSON.parse(raw)
-    } catch {
+      return decoder.decode(raw)
+    } catch (error) {
+      this.logger.error(error)
       await this.del(key)
     }
 
@@ -45,7 +53,7 @@ export class RedisCacheService implements OnApplicationShutdown, CacheService {
     // ioredis has strict overloads, so we must call exact signatures explicitly
 
     let result: 'OK' | null = null
-    const payload = JSON.stringify(value)
+    const payload = encoder.encode(value)
 
     switch (writeMode) {
       case 'ifExists':
