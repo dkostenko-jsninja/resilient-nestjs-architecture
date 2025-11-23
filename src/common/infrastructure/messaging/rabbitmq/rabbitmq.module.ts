@@ -76,8 +76,26 @@ export class RabbitMqFeatureModule {
       },
       {
         provide: MESSAGE_SUBSCRIBER_SERVICE,
-        useFactory: (channel: Channel) => new RabbitMqSubscriberService(channel, queue, deadLetterQueue, routingKeys),
-        inject: [CHANNEL],
+        useFactory: (connection: AmqpConnection) => {
+          const createChannel = async (): Promise<Channel> => {
+            const channel = connection.channel
+            await channel.assertExchange(exchange, 'x-delayed-message', { durable: true, arguments: { 'x-delayed-type': 'topic' } })
+            await channel.assertExchange(deadLetterExchange, 'topic', { durable: true })
+
+            await channel.assertQueue(queue, { durable: true, deadLetterExchange })
+            await channel.assertQueue(deadLetterQueue, { durable: true })
+
+            for (const routingKey of Object.values(routingKeys)) {
+              await channel.bindQueue(queue, exchange, routingKey)
+            }
+            await channel.bindQueue(deadLetterQueue, deadLetterExchange, getRoutingKey(feature, '*'))
+
+            return channel
+          }
+
+          return new RabbitMqSubscriberService(createChannel, queue, deadLetterQueue, routingKeys)
+        },
+        inject: [AmqpConnection],
       },
     ]
 
