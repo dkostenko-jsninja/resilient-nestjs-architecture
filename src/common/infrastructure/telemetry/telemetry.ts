@@ -60,11 +60,9 @@ export async function initMainTelemetry() {
     '@opentelemetry/instrumentation-express': { enabled: true },
     '@opentelemetry/instrumentation-http': { enabled: true },
     '@opentelemetry/instrumentation-nestjs-core': { enabled: true },
-    '@opentelemetry/instrumentation-ioredis': { enabled: true },
     '@opentelemetry/instrumentation-redis': { enabled: true },
     '@opentelemetry/instrumentation-pg': { enabled: true },
-    '@opentelemetry/instrumentation-mongodb': { enabled: true },
-    '@opentelemetry/instrumentation-mongoose': { enabled: true },
+    // '@opentelemetry/instrumentation-mongodb': { enabled: true },
   })
 }
 
@@ -72,10 +70,8 @@ export async function initWorkerTelemetry() {
   await initTelemetry(serviceWorkerName, prometheusExporterWorkerPort, {
     '@opentelemetry/instrumentation-amqplib': { enabled: true },
     '@opentelemetry/instrumentation-nestjs-core': { enabled: true },
-    '@opentelemetry/instrumentation-ioredis': { enabled: true },
     '@opentelemetry/instrumentation-redis': { enabled: true },
     '@opentelemetry/instrumentation-pg': { enabled: true },
-    '@opentelemetry/instrumentation-mongodb': { enabled: true },
-    '@opentelemetry/instrumentation-mongoose': { enabled: true },
+    // '@opentelemetry/instrumentation-mongodb': { enabled: true },
   })
 }

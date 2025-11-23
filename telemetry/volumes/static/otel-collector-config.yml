@@ -21,10 +21,10 @@ processors:
         type: status_code
         status_code:
           status_codes: [ERROR]
-      - name: keep_10_percent
+      - name: keep_1_percent
         type: probabilistic
         probabilistic:
-          sampling_percentage: 10
+          sampling_percentage: 1
 
   filter/api:
     metrics:

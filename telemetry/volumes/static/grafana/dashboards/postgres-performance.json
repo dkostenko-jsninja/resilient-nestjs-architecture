@@ -4,6 +4,7 @@
   "schemaVersion": 38,
   "refresh": "5s",
   "time": { "from": "now-15m", "to": "now" },
+  "graphTooltip": 2,
   "panels": [
     {
       "type": "stat",
@@ -184,15 +185,15 @@
       "title": "API DB Connection Pool (used vs idle)",
       "targets": [
         {
-          "expr": "db_client_connection_count{job=\"api\", db_client_connection_state=\"used\", db_system=\"postgresql\"}",
+          "expr": "db_client_connection_count{job=\"api\", db_client_connection_state=\"used\"}",
           "legendFormat": "Used"
         },
         {
-          "expr": "db_client_connection_count{job=\"api\", db_client_connection_state=\"idle\", db_system=\"postgresql\"}",
+          "expr": "db_client_connection_count{job=\"api\", db_client_connection_state=\"idle\"}",
           "legendFormat": "Idle"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "connections" } },
+      "fieldConfig": { "defaults": { "unit": "connections", "decimals": 0 } },
       "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
       "options": { "tooltip": { "mode": "multi" } }
     },
@@ -201,15 +202,15 @@
       "title": "Worker DB Connection Pool (used vs idle)",
       "targets": [
         {
-          "expr": "db_client_connection_count{job=\"worker\", db_client_connection_state=\"used\", db_system=\"postgresql\"}",
+          "expr": "db_client_connection_count{job=\"worker\", db_client_connection_state=\"used\"}",
           "legendFormat": "Used"
         },
         {
-          "expr": "db_client_connection_count{job=\"worker\", db_client_connection_state=\"idle\", db_system=\"postgresql\"}",
+          "expr": "db_client_connection_count{job=\"worker\", db_client_connection_state=\"idle\"}",
           "legendFormat": "Idle"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "connections" } },
+      "fieldConfig": { "defaults": { "unit": "connections", "decimals": 0 } },
       "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
       "options": { "tooltip": { "mode": "multi" } }
     }
