@@ -1,24 +1,13 @@
-import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common'
 import CircuitBreaker from 'opossum'
 import { StateMetricService } from 'src/common/application/metrics/state-metric.service'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
-
-export const CIRCUIT_BREAKER_NAME = Symbol('CIRCUIT_BREAKER_NAME')
-export const CIRCUIT_BREAKER_STATE_METRIC_SERVICE = Symbol('CIRCUIT_BREAKER_STATE_METRIC_SERVICE')
 
 @Injectable()
 export class CircuitBreakerService implements OnModuleDestroy {
   private readonly logger: Logger
   private readonly breaker: CircuitBreaker<[() => Promise<unknown>], unknown>
-  private readonly breakerOptions: CircuitBreaker.Options<[operation: () => Promise<unknown>]> = {
-    timeout: 3000,
-    errorThresholdPercentage: 50,
-    resetTimeout: 30000,
-    rollingCountTimeout: 30000,
-    rollingCountBuckets: 10,
-    volumeThreshold: 10,
-    allowWarmUp: true,
-  }
+  private readonly breakerOptions: CircuitBreaker.Options<[operation: () => Promise<unknown>]>
 
   private readonly state = {
     closed: 0,
@@ -27,9 +16,20 @@ export class CircuitBreakerService implements OnModuleDestroy {
   }
 
   constructor(
-    @Inject(CIRCUIT_BREAKER_NAME) private readonly name: string,
-    @Inject(CIRCUIT_BREAKER_STATE_METRIC_SERVICE) private readonly stateMetric: StateMetricService,
+    private readonly name: string,
+    breakerOptionOverrides: CircuitBreaker.Options<[operation: () => Promise<unknown>]>,
+    private readonly stateMetric: StateMetricService,
   ) {
+    this.breakerOptions = {
+      timeout: 3000,
+      errorThresholdPercentage: 50,
+      resetTimeout: 30000,
+      rollingCountTimeout: 30000,
+      rollingCountBuckets: 10,
+      volumeThreshold: 10,
+      allowWarmUp: true,
+      ...breakerOptionOverrides,
+    }
     this.stateMetric.set(this.state.closed)
     this.logger = new Logger(`${this.name} Circuit`)
     this.breaker = new CircuitBreaker((operation) => operation(), this.breakerOptions)
