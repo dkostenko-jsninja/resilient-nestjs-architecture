@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import { Message } from 'src/common/application/messaging/message'
-import { MessageQueue } from 'src/common/application/messaging/message-subscriber.service'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
+import { Message } from 'src/common/interface/messaging/message'
+import { MessageQueue } from 'src/common/interface/messaging/message-subscriber.service'
+import { TaskService } from '../../application/task.service'
 import { Task } from '../../domain/task.entity'
 import { TaskMessage, TaskMessageStatus } from './task-message'
 import { TaskMessageStateService } from './task-message-state.service'
-import { TaskService } from '../task.service'
 
 @Injectable()
 export class TaskMessageProcessorService {
@@ -35,7 +35,8 @@ export class TaskMessageProcessorService {
             result = await this.taskService.updateOne(payload.data.id, payload.data.changes)
             break
           case 'delete':
-            result = await this.taskService.deleteOne(payload.data.id)
+            await this.taskService.deleteOne(payload.data.id)
+            result = true
             break
         }
       } catch (error) {

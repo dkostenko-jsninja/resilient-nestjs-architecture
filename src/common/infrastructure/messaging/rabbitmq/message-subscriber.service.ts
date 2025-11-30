@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common'
 import { Channel, ConsumeMessage } from 'amqplib'
-import { Message } from 'src/common/application/messaging/message'
-import { MessageQueue, MessageSubscriberService } from 'src/common/application/messaging/message-subscriber.service'
+import { Message } from 'src/common/interface/messaging/message'
+import { MessageQueue, MessageSubscriberService } from 'src/common/interface/messaging/message-subscriber.service'
 import { assertMessageHeaders } from './message-headers'
 import { RabbitMqRoutingKeys } from './rabbitmq.types'
 

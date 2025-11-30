@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { randomUUID } from 'crypto'
-import { MESSAGE_PUBLISHER_SERVICE, MessagePublisherService } from 'src/common/application/messaging/message-publisher.service'
+import { MESSAGE_PUBLISHER_SERVICE, MessagePublisherService } from 'src/common/interface/messaging/message-publisher.service'
 import { TaskMessageInput, TaskMessageState, TaskMessageStatus } from './task-message'
 import { TaskMessageStateService } from './task-message-state.service'
 
@@ -18,8 +18,8 @@ export class TaskMessagePublisherService {
     await this.publisher.publish(
       { key: message.key, payload: { id: state.id, data: message.payload } },
       {
-        delayMs: 5_000,
-        retryPolicy: { maxRetries: 3, baseDelayMs: 10_000, maxDelayMs: 30_000 },
+        delayMs: 5000,
+        retryPolicy: { maxRetries: 3, baseDelayMs: 30000, maxDelayMs: 120000 },
       },
     )
     return state

@@ -1,8 +1,8 @@
 import { Inject, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import { MESSAGE_SUBSCRIBER_SERVICE, MessageSubscriberService } from 'src/common/application/messaging/message-subscriber.service'
 import { RabbitMqFeatureModule } from 'src/common/infrastructure/messaging/rabbitmq/rabbitmq.module'
-import { TaskMessageProcessorService } from './application/messaging/task-message-processor.service'
+import { MESSAGE_SUBSCRIBER_SERVICE, MessageSubscriberService } from 'src/common/interface/messaging/message-subscriber.service'
 import { TASK_MESSAGING_CONFIG } from './infrastructure/messaging/rabbitmq/task-messaging.config'
+import { TaskMessageProcessorService } from './interface/messaging/task-message-processor.service'
 import { TasksCommonModule } from './tasks-common.module'
 
 @Module({

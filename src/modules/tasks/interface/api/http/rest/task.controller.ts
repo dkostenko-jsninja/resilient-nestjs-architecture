@@ -2,10 +2,10 @@ import { Body, Controller, Delete, Get, HttpStatus, NotFoundException, Param, Po
 import type { Response } from 'express'
 import { TransientInfrastructureError } from 'src/common/errors/transient-infrastructure.error'
 import { ServiceUnavailableFilter } from 'src/common/interface/api/http/filters/service-unavailable.filter'
-import { TaskMessageInput, TaskMessageState } from 'src/modules/tasks/application/messaging/task-message'
-import { TaskMessagePublisherService } from 'src/modules/tasks/application/messaging/task-message-publisher.service'
-import { TaskMessageStateService } from 'src/modules/tasks/application/messaging/task-message-state.service'
 import { TaskService } from 'src/modules/tasks/application/task.service'
+import { TaskMessageInput, TaskMessageState } from 'src/modules/tasks/interface/messaging/task-message'
+import { TaskMessagePublisherService } from 'src/modules/tasks/interface/messaging/task-message-publisher.service'
+import { TaskMessageStateService } from 'src/modules/tasks/interface/messaging/task-message-state.service'
 import { CreateTaskDto, TaskIdParamDto, UpdateTaskDto } from './task.dto'
 
 @UseFilters(ServiceUnavailableFilter)
