@@ -5,6 +5,7 @@ ENV_FILES=(
   ".env.core"
   ".env.overlay"
   ".env.overlay.local"
+  ".env.k6"
 )
 
 for FILE in "${ENV_FILES[@]}"; do

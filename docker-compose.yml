@@ -7,6 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     command: node dist/main
+    restart: unless-stopped
     env_file:
       - .env.core
       - .env.overlay
@@ -17,7 +18,7 @@ services:
       - rabbitmq
       - otel-collector
     ports:
-      - "${PORT}:${PORT}"
+      - "${APP_PORT}:${APP_PORT}"
       - "${OTEL_PROMETHEUS_EXPORTER_API_PORT}:9464"
     networks:
       - backend
@@ -31,6 +32,7 @@ services:
       context: .
       dockerfile: Dockerfile
     command: node dist/worker
+    restart: unless-stopped
     env_file:
       - .env.core
       - .env.overlay
@@ -209,6 +211,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --enable-feature=otlp-write-receive
+      - --web.enable-remote-write-receiver
     ports:
       - "${PROMETHEUS_PORT}:9090"
     volumes:
@@ -242,6 +245,22 @@ services:
       - monitoring
     profiles:
       - telemetry
+
+  k6:
+    image: grafana/k6:1.4.0
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - BASE_URL=${BASE_URL}
+      - VIRTUAL_USER_COUNT=${VIRTUAL_USER_COUNT}
+      - TEST_DURATION=${TEST_DURATION}
+    command: run -o experimental-prometheus-rw /test/main.js
+    volumes:
+      - ./test/k6:/test
+    networks:
+      - backend
+      - monitoring
+    profiles:
+      - testing
 
 volumes:
   mongo_data:

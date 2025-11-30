@@ -11,7 +11,7 @@ export interface AppConfig {
 
 export const configFactory = registerAs(APP_CONFIG_KEY, () => {
   const configuration: Record<keyof AppConfig, string | undefined> = {
-    port: process.env.PORT,
+    port: process.env.APP_PORT,
     env: process.env.NODE_ENV,
   }
 

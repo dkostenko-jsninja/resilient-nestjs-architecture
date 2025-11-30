@@ -84,8 +84,8 @@
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 6 },
       "targets": [
         {
-          "expr": "up{job=\"api\"}",
-          "legendFormat": "Process (Up/Down)",
+          "expr": "nodejs_eventloop_utilization{job=\"api\"} * 100",
+          "legendFormat": "Event Loop Utilization",
           "refId": "A"
         },
         {
@@ -105,33 +105,9 @@
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Process (Up/Down)" },
+            "matcher": { "id": "byName", "options": "Event Loop Utilization" },
             "properties": [
-              { "id": "unit", "value": "bool" },
-              { "id": "max", "value": 2 },
-              { "id": "color", "value": { "mode": "thresholds" } },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    { "color": "red", "value": 0 },
-                    { "color": "green", "value": 1 }
-                  ]
-                }
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": { "text": "Down" },
-                      "1": { "text": "Up" }
-                    }
-                  }
-                ]
-              },
+              { "id": "unit", "value": "percent" },
               { "id": "custom.axisPlacement", "value": "right" },
               { "id": "custom.fillOpacity", "value": 5 }
             ]
@@ -153,8 +129,8 @@
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 6 },
       "targets": [
         {
-          "expr": "up{job=\"worker\"}",
-          "legendFormat": "Process (Up/Down)",
+          "expr": "nodejs_eventloop_utilization{job=\"worker\"} * 100",
+          "legendFormat": "Event Loop Utilization",
           "refId": "A"
         },
         {
@@ -174,33 +150,9 @@
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Process (Up/Down)" },
+            "matcher": { "id": "byName", "options": "Event Loop Utilization" },
             "properties": [
-              { "id": "unit", "value": "bool" },
-              { "id": "max", "value": 2 },
-              { "id": "color", "value": { "mode": "thresholds" } },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    { "color": "red", "value": 0 },
-                    { "color": "green", "value": 1 }
-                  ]
-                }
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "0": { "text": "Down" },
-                      "1": { "text": "Up" }
-                    }
-                  }
-                ]
-              },
+              { "id": "unit", "value": "percent" },
               { "id": "custom.axisPlacement", "value": "right" },
               { "id": "custom.fillOpacity", "value": 5 }
             ]
@@ -422,25 +374,16 @@
     },
     {
       "type": "timeseries",
-      "title": "Redis Command Latency (p95, ms)",
+      "title": "Redis Throughput (ops/s)",
       "gridPos": { "x": 4, "y": 20, "w": 10, "h": 6 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(redis_commands_latencies_usec_bucket[10s])) by (le)) / 1000",
-          "legendFormat": "Latency",
+          "expr": "rate(redis_commands_processed_total[10s])",
+          "legendFormat": "ops/s",
           "refId": "A"
         }
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ms",
-          "custom": {
-            "drawStyle": "lines",
-            "fillOpacity": 15,
-            "showPoints": "never"
-          }
-        }
-      },
+      "fieldConfig": { "defaults": { "unit": "ops/s" } },
       "options": { "tooltip": { "mode": "multi" } }
     },
     {

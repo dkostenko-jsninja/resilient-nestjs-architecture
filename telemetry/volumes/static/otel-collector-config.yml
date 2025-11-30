@@ -14,13 +14,15 @@ processors:
 
   tail_sampling:
     decision_wait: 10s
-    num_traces: 10000
-    expected_new_traces_per_sec: 500
+    expected_new_traces_per_sec: 900 # expected RPS
+    num_traces: 18000 # RPS * 2 * wait
     policies:
-      - name: keep_errors
-        type: status_code
-        status_code:
-          status_codes: [ERROR]
+      - name: keep_5xx
+        type: numeric_attribute
+        numeric_attribute:
+          key: http.status_code
+          min_value: 500
+          max_value: 599
       - name: keep_1_percent
         type: probabilistic
         probabilistic:
