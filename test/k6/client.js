@@ -7,7 +7,7 @@ randomSeed(123456)
 const RETRYABLE_STATUS_CODES = new Set([0, 500, 502, 503, 504])
 
 export function jitter() {
-  return Math.random() * 0.2
+  return Math.random() * 0.1
 }
 
 function ok(response, name = 'http') {
@@ -33,15 +33,14 @@ export function request(method, path, { body = null, tags = {}, name = method } 
     response = http.request(method, url, body, params)
 
     if (RETRYABLE_STATUS_CODES.has(response.status) && attempt < config.maxRetries) {
-      const retryAfter = response.headers['Retry-After'] || config.retryAfter
+      const retryAfter = config.retryAfter // or response.headers['Retry-After'] if you want a realistic retry simulation
       sleep(retryAfter + jitter())
       attempt++
       continue
     }
 
     if (response.status === 202) {
-      const data = safeJson(response)
-      const retryAfter = data?.retryAfter ?? config.retryAfter
+      const retryAfter = config.retryAfter // or safeJson(response).retryAfter if you want a realistic retry simulation
       response = pollQueuedTask(response.headers.Location, retryAfter, tags)
     }
 

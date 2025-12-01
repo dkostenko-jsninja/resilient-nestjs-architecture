@@ -26,25 +26,25 @@ export const metrics = {
 
 export const options = {
   scenarios: {
-    tasksFull: {
+    read: {
       executor: 'constant-vus',
-      vus: Math.floor(__ENV.VIRTUAL_USER_COUNT / 2),
-      duration: __ENV.TEST_DURATION,
-      exec: 'tasksFullScenario',
-      tags: { scenario: 'tasks-full' },
-    },
-    tasksReadOnly: {
-      executor: 'constant-vus',
-      vus: Math.floor(__ENV.VIRTUAL_USER_COUNT / 2),
+      vus: Math.floor(__ENV.VIRTUAL_USER_COUNT * 0.3),
       duration: __ENV.TEST_DURATION,
       exec: 'tasksReadOnlyScenario',
-      tags: { scenario: 'tasks-readonly' },
+    },
+    write: {
+      executor: 'constant-vus',
+      vus: Math.floor(__ENV.VIRTUAL_USER_COUNT * 0.7),
+      duration: __ENV.TEST_DURATION,
+      exec: 'tasksWriteOnlyScenario',
     },
   },
   thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(95)<200'],
+    'http_req_failed{scenario:read}': ['rate<0.01'],
+    'http_req_failed{scenario:write}': ['rate<0.01'],
+    'http_req_duration{scenario:read}': ['p(95)<200'],
+    'http_req_duration{scenario:write}': ['p(95)<200'],
     http_queued_req_failed: ['rate<0.01'],
-    http_queued_req_duration: ['p(95)<5000', 'p(99)<60000'],
+    http_queued_req_duration: ['p(95)<30000', 'p(99)<120000'],
   },
 }

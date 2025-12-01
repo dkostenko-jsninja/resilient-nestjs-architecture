@@ -409,6 +409,11 @@
               { "color": "red", "value": 2 }
             ]
           },
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
           "mappings": [
             {
               "type": "value",
@@ -445,6 +450,11 @@
               { "color": "orange", "value": 1 },
               { "color": "red", "value": 2 }
             ]
+          },
+          "custom": {
+            "drawStyle": "lines",
+            "fillOpacity": 15,
+            "showPoints": "never"
           },
           "mappings": [
             {

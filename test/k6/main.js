@@ -1,5 +1,5 @@
 import { options } from './config.js'
-import { cleanupTasksApi, runFullTasksApi, runReadOnlyTasksApi } from './tasks.js'
+import { cleanupTasksApi, runReadOnlyTasksApi, runWriteOnlyTasksApi } from './tasks.js'
 
 export { options }
 
@@ -8,12 +8,12 @@ export function setup() {
   cleanupTasksApi()
 }
 
-export function tasksFullScenario() {
-  runFullTasksApi()
-}
-
 export function tasksReadOnlyScenario() {
   runReadOnlyTasksApi()
+}
+
+export function tasksWriteOnlyScenario() {
+  runWriteOnlyTasksApi()
 }
 
 export function teardown() {

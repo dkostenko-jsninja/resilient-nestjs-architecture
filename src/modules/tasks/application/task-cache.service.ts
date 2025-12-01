@@ -8,7 +8,7 @@ export type TaskCacheScenario = 'get-one' | 'get-all'
 @Injectable()
 export class TaskCacheService {
   private readonly logger = new Logger(TaskCacheService.name)
-  private readonly TTL = 3600
+  private readonly TTL_S = 120
 
   constructor(
     @Inject(CACHE_SERVICE)
@@ -58,7 +58,7 @@ export class TaskCacheService {
   }
 
   private set(id: 'all' | string, payload: Task | Task[]): void {
-    this.cacheService.set(this.buildCacheKey(id), payload, 'always', 'seconds', this.TTL).catch((error) => {
+    this.cacheService.set(this.buildCacheKey(id), payload, 'always', 'seconds', this.TTL_S).catch((error) => {
       this.logger.error(error)
     })
   }

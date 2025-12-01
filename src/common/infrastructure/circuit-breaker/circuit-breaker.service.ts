@@ -21,13 +21,13 @@ export class CircuitBreakerService implements OnModuleDestroy {
     private readonly stateMetric: StateMetricService,
   ) {
     this.breakerOptions = {
-      timeout: 3000,
-      errorThresholdPercentage: 50,
-      resetTimeout: 30000,
-      rollingCountTimeout: 30000,
-      rollingCountBuckets: 10,
-      volumeThreshold: 10,
-      allowWarmUp: true,
+      timeout: 1000,
+      resetTimeout: 15000,
+      errorThresholdPercentage: 10,
+      rollingCountTimeout: 5000,
+      rollingCountBuckets: 5,
+      volumeThreshold: 1,
+      allowWarmUp: false,
       ...breakerOptionOverrides,
     }
     this.stateMetric.set(this.state.closed)

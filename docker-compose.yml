@@ -11,18 +11,14 @@ services:
     env_file:
       - .env.core
       - .env.overlay
-    depends_on:
-      # - mongo # Uncomment if you want to use MongoDB
-      - postgres
-      - redis
-      - rabbitmq
-      - otel-collector
     ports:
       - "${APP_PORT}:${APP_PORT}"
       - "${OTEL_PROMETHEUS_EXPORTER_API_PORT}:9464"
     networks:
-      - backend
-      - monitoring
+      - default
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
     profiles:
       - core
 
@@ -36,19 +32,49 @@ services:
     env_file:
       - .env.core
       - .env.overlay
-    depends_on:
-      # - mongo # Uncomment if you want to use MongoDB
-      - postgres
-      - redis
-      - rabbitmq
-      - otel-collector
     ports:
       - "${OTEL_PROMETHEUS_EXPORTER_WORKER_PORT}:9465"
     networks:
-      - backend
-      - monitoring
+      - default
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
     profiles:
       - core
+
+  toxiproxy:
+    container_name: toxiproxy
+    build: ./toxiproxy
+    environment:
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      REDIS_PORT: ${REDIS_PORT}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+    ports:
+      - "8474:8474"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "${REDIS_PORT}:${REDIS_PORT}"
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+    networks:
+      - default
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: [
+          "CMD-SHELL",
+          'curl -sf http://localhost:8474/proxies | grep -q "postgres" &&
+          curl -sf http://localhost:8474/proxies | grep -q "redis" &&
+          curl -sf http://localhost:8474/proxies | grep -q "rabbitmq"',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    profiles:
+      - deps
 
   # Uncomment if you want to use MongoDB
   # mongo:
@@ -59,13 +85,12 @@ services:
   #     MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
   #     MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
   #     MONGO_INITDB_DATABASE: ${MONGO_DB}
-  #   ports:
-  #     - "${MONGO_PORT}:27017"
   #   volumes:
   #     - mongo_data:/data/db
+  #   ports:
+  #     - "27017:27017"
   #   networks:
-  #     - backend
-  #     - monitoring
+  #     - default
   #   profiles:
   #     - deps
 
@@ -77,13 +102,17 @@ services:
       POSTGRES_USER: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     networks:
-      - backend
-      - monitoring
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     profiles:
       - deps
 
@@ -91,13 +120,17 @@ services:
     image: redis:7.2-alpine
     container_name: redis
     restart: unless-stopped
-    ports:
-      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
+    ports:
+      - "6379:6379"
     networks:
-      - monitoring
-      - backend
+      - default
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     profiles:
       - deps
 
@@ -107,17 +140,21 @@ services:
       dockerfile: Dockerfile
     container_name: rabbitmq
     ports:
-      - "${RABBITMQ_PORT}:5672"
+      - "5672:5672"
       - "${RABBITMQ_MANAGEMENT_PORT}:15672"
       - "${RABBITMQ_METRICS_PORT}:15692"
+    networks:
+      - default
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - monitoring
-      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     profiles:
       - deps
 
@@ -135,10 +172,10 @@ services:
     ports:
       - "${OTEL_HTTP_PORT}:4318"
       - "${OTEL_GRPC_PORT}:4317"
+    networks:
+      - default
     depends_on:
       - jaeger
-    networks:
-      - monitoring
     profiles:
       - telemetry
 
@@ -151,7 +188,7 @@ services:
     ports:
       - "${JAEGER_PORT}:16686"
     networks:
-      - monitoring
+      - default
     profiles:
       - telemetry
 
@@ -160,29 +197,30 @@ services:
     container_name: postgres-exporter
     restart: unless-stopped
     environment:
-      - DATA_SOURCE_NAME=postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
+      - DATA_SOURCE_NAME=postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
     ports:
       - "9187:9187"
-    depends_on:
-      - postgres
     networks:
-      - monitoring
+      - default
+    depends_on:
+      postgres:
+        condition: service_healthy
     profiles:
       - telemetry
 
   # Uncomment if you want to use MongoDB
   # mongodb-exporter:
   #   image: percona/mongodb_exporter:0.47.1
+  #   container_name: mongo-exporter
   #   command:
   #     - "--mongodb.uri=mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:${MONGO_PORT}/admin?sslmode=disable"
-  #   container_name: mongo-exporter
   #   restart: unless-stopped
   #   ports:
   #     - "9216:9216"
+  #   networks:
+  #     - default
   #   depends_on:
   #     - mongo
-  #   networks:
-  #     - monitoring
   #   profiles:
   #     - telemetry
 
@@ -191,16 +229,17 @@ services:
     container_name: redis-exporter
     restart: unless-stopped
     environment:
-      - REDIS_ADDR=redis://redis:${REDIS_PORT}
+      - REDIS_ADDR=redis://redis:6379
       - REDIS_EXPORTER_INCL_SYSTEM_METRICS=true
       - REDIS_EXPORTER_INCL_COMMAND_STATS=true
       - REDIS_EXPORTER_INCL_LATENCY_METRICS=true
     ports:
       - "9121:9121"
     networks:
-      - monitoring
+      - default
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     profiles:
       - telemetry
 
@@ -212,16 +251,16 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --enable-feature=otlp-write-receive
       - --web.enable-remote-write-receiver
-    ports:
-      - "${PROMETHEUS_PORT}:9090"
     volumes:
       - ./telemetry/volumes/generated/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "${PROMETHEUS_PORT}:9090"
+    networks:
+      - default
     depends_on:
       - postgres-exporter
       # - mongodb-exporter # Uncomment if you want to use MongoDB
       - redis-exporter
-    networks:
-      - monitoring
     profiles:
       - telemetry
 
@@ -229,8 +268,6 @@ services:
     image: grafana/grafana:10.4.2
     container_name: grafana
     restart: unless-stopped
-    ports:
-      - "${GF_PORT}:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
@@ -238,27 +275,34 @@ services:
     volumes:
       - ./telemetry/volumes/static/grafana/provisioning:/etc/grafana/provisioning
       - ./telemetry/volumes/static/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "${GF_PORT}:3000"
+    networks:
+      - default
     depends_on:
       - prometheus
       - jaeger
-    networks:
-      - monitoring
     profiles:
       - telemetry
 
   k6:
     image: grafana/k6:1.4.0
+    container_name: k6
+    command: run -o experimental-prometheus-rw /test/main.js
     environment:
       - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
       - BASE_URL=${BASE_URL}
       - VIRTUAL_USER_COUNT=${VIRTUAL_USER_COUNT}
       - TEST_DURATION=${TEST_DURATION}
-    command: run -o experimental-prometheus-rw /test/main.js
     volumes:
       - ./test/k6:/test
     networks:
-      - backend
-      - monitoring
+      - default
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "2G"
     profiles:
       - testing
 
@@ -269,7 +313,5 @@ volumes:
   rabbitmq_data:
 
 networks:
-  backend:
-    driver: bridge
-  monitoring:
+  default:
     driver: bridge
