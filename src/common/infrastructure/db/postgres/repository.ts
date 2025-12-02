@@ -44,6 +44,10 @@ export abstract class CommonPostgresRepository<
     return !!result.affected
   }
 
+  async deleteAll(): Promise<void> {
+    await this.repository.deleteAll()
+  }
+
   private byId(id: string) {
     return { id } as FindOptionsWhere<Entity> // TODO: fix typecast
   }

@@ -3,6 +3,7 @@
 /node_modules
 /build
 /telemetry/volumes/generated
+/telemetry/volumes/static/grafana/dashboards/generated-*.json
 
 # Logs
 logs
@@ -41,6 +42,7 @@ lerna-debug.log*
 .env.core
 .env.overlay
 .env.overlay.local
+.env.k6
 
 # temp directory
 .temp

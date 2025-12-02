@@ -1,13 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common'
-import { CACHE_SERVICE, CacheService } from 'src/common/application/cache/cache.service'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { CacheMetricService } from 'src/common/application/cache/cache-metric.service'
+import { CACHE_SERVICE, CacheService } from 'src/common/application/cache/cache.service'
 import { Task } from '../domain/task.entity'
 
 export type TaskCacheScenario = 'get-one' | 'get-all'
 
 @Injectable()
 export class TaskCacheService {
-  private readonly TTL = 3600
+  private readonly logger = new Logger(TaskCacheService.name)
+  private readonly TTL_S = 120
 
   constructor(
     @Inject(CACHE_SERVICE)
@@ -38,28 +39,34 @@ export class TaskCacheService {
   }
 
   setAll(tasks: Task[]): void {
-    this.set('all', tasks)
+    setImmediate(() => this.set('all', tasks))
   }
 
   setOne(task: Task): void {
-    this.set(task.id, task)
+    setImmediate(() => this.set(task.id, task))
   }
 
   deleteOne(id: string): void {
-    this.del(id)
-    this.del('all')
+    setImmediate(() => {
+      this.del(id)
+      this.del('all')
+    })
   }
 
   deleteAll(): void {
-    this.del('all')
+    setImmediate(() => this.del('all'))
   }
 
   private set(id: 'all' | string, payload: Task | Task[]): void {
-    this.cacheService.set(this.buildCacheKey(id), payload, 'always', 'seconds', this.TTL).catch(() => {})
+    this.cacheService.set(this.buildCacheKey(id), payload, 'always', 'seconds', this.TTL_S).catch((error) => {
+      this.logger.error(error)
+    })
   }
 
   private del(id: 'all' | string): void {
-    this.cacheService.del(this.buildCacheKey(id)).catch(() => {})
+    this.cacheService.del(this.buildCacheKey(id)).catch((error) => {
+      this.logger.error(error)
+    })
   }
 
   private buildCacheKey(id: 'all' | string): string {

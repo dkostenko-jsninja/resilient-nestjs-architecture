@@ -59,7 +59,7 @@
           "refId": "A"
         }
       ],
-      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "fieldConfig": { "defaults": { "unit": "ops/s" } },
       "options": { "tooltip": { "mode": "multi" } }
     },
     {

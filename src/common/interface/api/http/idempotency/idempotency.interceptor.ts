@@ -21,10 +21,10 @@ interface CachedResponse {
 
 const IDEMPOTENCY_HEADER = 'X-Idempotency-Key'
 const IDEMPOTENCY_CACHE_PREFIX = 'idempotency'
-const PROCESSING_TTL_S = 5 // since the API is simple, the processing TTL is low, but ideally it should be based on metricts
+const PROCESSING_TTL_S = 5
 const PROCESSING_TTL_MS = PROCESSING_TTL_S * 1000
 const PROCESSING_POLL_INTERVAL_MS = 500
-const RESPONSE_TTL_S = 900
+const RESPONSE_TTL_S = 120
 const FORWARD_RESPONSE_HEADERS = new Set(['content-type', 'cache-control', 'etag', 'last-modified', 'location'])
 
 @Injectable()
@@ -39,11 +39,11 @@ export class IdempotencyInterceptor implements NestInterceptor {
 
     const key = request.header(IDEMPOTENCY_HEADER)
 
-    if (!key || request.method.toUpperCase() === 'GET') {
+    if (request.method.toUpperCase() === 'GET') {
       return next.handle()
     }
 
-    if (key && !isUUID(key)) {
+    if (!key || !isUUID(key)) {
       throw new BadRequestException(`${IDEMPOTENCY_HEADER} must be a valid UUID`)
     }
 

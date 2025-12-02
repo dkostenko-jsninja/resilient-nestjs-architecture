@@ -50,4 +50,8 @@ export abstract class CommonInMemoryRepository<
   async deleteOne(id: string): Promise<boolean> {
     return this.entities.delete(id)
   }
+
+  async deleteAll(): Promise<void> {
+    this.entities.clear()
+  }
 }

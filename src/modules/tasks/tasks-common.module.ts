@@ -2,9 +2,9 @@ import { Module, Provider } from '@nestjs/common'
 import { CacheMetricService } from 'src/common/application/cache/cache-metric.service'
 import { OTelCounterMetricService } from 'src/common/infrastructure/telemetry/metrics/counter-metric.service'
 import { CommonMetricAttributes, METRIC_DEFINITIONS } from 'src/common/infrastructure/telemetry/telemetry.constants'
-import { TaskMessageStateService } from './application/messaging/task-message-state.service'
 import { TaskCacheScenario, TaskCacheService } from './application/task-cache.service'
 import { TaskService } from './application/task.service'
+import { TaskMessageStateService } from './interface/messaging/task-message-state.service'
 import { TasksRepositoryModule } from './tasks-repository.module'
 
 const PROVIDERS: Provider[] = [

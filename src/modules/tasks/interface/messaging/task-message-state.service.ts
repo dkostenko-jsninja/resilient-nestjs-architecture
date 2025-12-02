@@ -4,10 +4,12 @@ import { TaskMessageState } from './task-message'
 
 @Injectable()
 export class TaskMessageStateService {
+  private readonly TTL_S = 120
+
   constructor(@Inject(CACHE_SERVICE) private readonly cache: CacheService) {}
 
   async setState(state: TaskMessageState): Promise<boolean> {
-    return await this.cache.set(this.buildCacheKey(state.id), state, 'always', 'seconds', 3600)
+    return await this.cache.set(this.buildCacheKey(state.id), state, 'always', 'seconds', this.TTL_S)
   }
 
   async getState(id: string): Promise<TaskMessageState | null> {
@@ -15,7 +17,7 @@ export class TaskMessageStateService {
   }
 
   async updateState(state: TaskMessageState): Promise<boolean> {
-    return await this.cache.set(this.buildCacheKey(state.id), state, 'ifExists', 'seconds', 3600)
+    return await this.cache.set(this.buildCacheKey(state.id), state, 'ifExists', 'seconds', this.TTL_S)
   }
 
   private buildCacheKey(id: string): string {

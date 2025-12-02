@@ -60,4 +60,8 @@ export class TaskService {
     this.taskCacheService.deleteOne(id)
     return isDeleted
   }
+
+  async deleteAll(): Promise<void> {
+    await this.taskRepository.deleteAll()
+  }
 }

@@ -13,4 +13,5 @@ export interface CommonRepository<
    * @returns true if an element existed and has been removed, or false if the element does not exist.
    */
   deleteOne(id: string): Promise<boolean>
+  deleteAll(): Promise<void>
 }
