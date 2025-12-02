@@ -1,0 +1,31 @@
+@startuml
+actor Client
+participant Controller
+participant "Use Case" as Service
+participant DB
+participant Cache
+participant "Message Publisher" as Publisher
+participant "Message Broker" as Broker
+
+Client -> Controller: write request
+Controller -> Service: write data
+Service -> DB: write data
+alt DB available
+  DB --> Service: data
+  Service --> Controller: data
+  Controller --> Client: response
+else DB unavailable
+  DB --> Service: error
+  Service --> Controller: error
+  Controller -> Publisher: enqueue write request
+  Publisher -> Cache: set message state\n{id, status: "pending"}
+  alt Cache available
+    Publisher -> Broker: publish\ndelay + retry policy
+    Controller <-- Publisher: message id
+    Controller --> Client: 202 Accepted\nLocation: /queued/{id}\nRetry-After: <estimated recovery>
+  else Cache unavailable
+    Controller <-- Publisher: error
+    Controller --> Client: 503 Service Unavailable
+  end
+end
+@enduml

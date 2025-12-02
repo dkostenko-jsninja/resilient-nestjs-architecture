@@ -1,0 +1,48 @@
+@startuml
+skinparam responseMessageBelowArrow true
+
+actor Client
+participant Interceptor
+participant Controller
+participant Cache
+
+Client -> Interceptor: Write request
+alt header invalid
+  Interceptor --> Client: 400 Bad Request
+end
+Interceptor -> Interceptor: derive idempotency key (method + URL + header)
+Interceptor -> Cache: get cached response
+alt cached response exists | replay
+  Cache --> Interceptor: cached response
+  Interceptor --> Client: cached response
+end
+Interceptor -> Cache: set "in progress" marker with estimated processing TTL
+alt marker set successfully | new request
+  Interceptor -> Controller: proceed normally
+  alt  request succeeded
+    Controller --> Interceptor: response
+    Interceptor -> Cache: save response with TTL
+    Interceptor -> Cache: clear "in progress" marker
+    Interceptor --> Client: response
+  else  request failed
+    Controller --> Interceptor: error
+    Interceptor -> Cache: clear "in progress" marker
+    Interceptor --> Client: error
+  end
+else marker already exists | concurrent duplicate request
+  loop until response exists or marker TTL expires
+    Interceptor -> Cache: get cached response
+    alt original cached response exists
+      Cache --> Interceptor: cached response
+    Interceptor --> Client: cached response
+    else original request still processing
+      Interceptor -> Interceptor: wait briefly
+    end
+  end
+  Interceptor --> Client: 408 Request Timeout
+else cache unavailable
+  Cache --> Interceptor: error
+  Interceptor --> Client: 503 Service Unavailable
+end
+
+@enduml

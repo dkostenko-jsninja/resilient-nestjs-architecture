@@ -1,0 +1,37 @@
+@startuml
+actor "Worker" as Subscriber
+participant "Use Case" as Service
+participant "Message Broker" as Broker
+participant Cache
+
+Subscriber -> Broker: subscribe
+Broker --> Subscriber: message
+Subscriber -> Cache: get message state
+alt Cache available
+  alt status "pending"
+    Subscriber -> Cache: set message state {id, status: "in_progress"}
+    Subscriber -> Service: write data
+    alt success
+      Service --> Subscriber: data
+      Subscriber -> Cache: set message state {id, status: "completed", result}
+      Subscriber --> Broker: acknowledge
+    else error
+      Service --> Subscriber: error
+      alt retry allowed
+        Subscriber -> Cache: set message state {id, status: "pending"}
+        Subscriber --> Broker: republish with exponential backoff
+      else max retries
+        Subscriber -> Cache: set message state {id, status: "failed"}
+        Subscriber --> Broker: reject to dead-letter queue
+      end
+    end
+  else status in ("in_progress", "completed", "failed")
+    Subscriber --> Broker: acknowledge (duplicate or late message)
+  end
+else Cache unavailable
+  alt retry allowed
+    Subscriber --> Broker: republish with exponential backoff
+  else max retries
+    Subscriber --> Broker: reject to dead-letter queue
+  end
+end

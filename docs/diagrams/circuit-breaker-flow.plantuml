@@ -1,0 +1,36 @@
+@startuml
+actor Caller
+participant "Circuit Breaker" as Breaker
+participant Dependency
+
+Caller -> Breaker: fire(operation)
+
+alt state = CLOSED
+  Breaker -> Dependency: execute(operation)
+  alt success
+    Dependency --> Breaker: result
+    Breaker --> Caller: result
+  else failure/timeout
+    Dependency --> Breaker: error
+    Breaker --> Caller: TransientInfrastructureError
+    note over Breaker: records failure; may trip to OPEN\nif error threshold exceeded
+  end
+
+else state = OPEN
+  note over Breaker: short-circuits (no dependency call)
+  Breaker --> Caller: TransientInfrastructureError
+
+else state = HALF-OPEN
+  Breaker -> Dependency: probe request
+  alt probe success
+    Dependency --> Breaker: result
+    note over Breaker: closes breaker (reset counts)
+    Breaker --> Caller: result
+  else probe failure
+    Dependency --> Breaker: error
+    note over Breaker: re-opens breaker (reset timeout)
+    Breaker --> Caller: TransientInfrastructureError
+  end
+
+end
+@enduml
