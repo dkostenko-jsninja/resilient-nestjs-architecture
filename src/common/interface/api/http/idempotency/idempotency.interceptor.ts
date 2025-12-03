@@ -21,11 +21,12 @@ interface CachedResponse {
 
 const IDEMPOTENCY_HEADER = 'X-Idempotency-Key'
 const IDEMPOTENCY_CACHE_PREFIX = 'idempotency'
+const FORWARD_RESPONSE_HEADERS = new Set(['content-type', 'cache-control', 'etag', 'last-modified', 'location'])
+// TTL tuning should be based on metrics and business needs.
 const PROCESSING_TTL_S = 5
 const PROCESSING_TTL_MS = PROCESSING_TTL_S * 1000
 const PROCESSING_POLL_INTERVAL_MS = 500
 const RESPONSE_TTL_S = 120
-const FORWARD_RESPONSE_HEADERS = new Set(['content-type', 'cache-control', 'etag', 'last-modified', 'location'])
 
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {

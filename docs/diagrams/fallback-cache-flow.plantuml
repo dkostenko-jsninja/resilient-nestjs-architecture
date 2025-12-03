@@ -1,0 +1,46 @@
+@startuml
+actor Client
+participant Controller
+participant "Use Case" as Service
+participant DB
+participant Cache
+
+Client -> Controller: Read request
+Controller -> Service: get data
+Service -> DB: get data
+
+alt DB available
+  DB --> Service: data
+  Service -> Cache: cache data with TTL (fire-and-forget)
+  Service --> Controller: data
+  Controller --> Client: response
+else DB unavailable
+	DB --> Service: error
+  Service -> Cache: get cached data
+  alt Cache hit
+    Cache --> Service: cached data
+    Service --> Controller: cached data
+    Controller --> Client: response
+  else Cache miss/unavailable
+    Cache --> Service: null or error
+    Service --> Controller: propagate original error
+    Controller --> Client: 503 Service Unavailable
+  end
+end
+
+Client -> Controller: Write request
+Controller -> Service: write data
+Service -> DB: write data
+
+alt DB available
+  DB --> Service: data
+  Service -> Cache: delete cache (fire-and-forget)
+  Service --> Controller: data
+  Controller --> Client: response
+else DB unavailable
+	DB --> Service: error
+  Service --> Controller: error
+  Controller --> Client: 503 Service Unavailable
+end
+
+@enduml

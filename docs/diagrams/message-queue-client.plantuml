@@ -1,0 +1,12 @@
+@startuml
+actor Client
+participant Controller
+participant Cache
+
+loop until status is "completed" or "failed"
+  Client -> Controller: GET /queued/{id}
+  Controller -> Cache: get message state
+  Cache --> Controller: {id, status, result?}
+  Controller --> Client: {id, status, result?}
+end
+@enduml
