@@ -17,6 +17,7 @@ export class TaskMessagePublisherService {
     await this.messageStateService.setState(state)
     await this.publisher.publish(
       { key: message.key, payload: { id: state.id, data: message.payload } },
+      // Retry policy tuning should be based on metrics and business needs.
       {
         delayMs: 5000,
         retryPolicy: { maxRetries: 3, baseDelayMs: 30000, maxDelayMs: 120000 },

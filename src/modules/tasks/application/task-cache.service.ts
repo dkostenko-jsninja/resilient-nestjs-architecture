@@ -8,6 +8,7 @@ export type TaskCacheScenario = 'get-one' | 'get-all'
 @Injectable()
 export class TaskCacheService {
   private readonly logger = new Logger(TaskCacheService.name)
+  // TTL tuning should be based on metrics and business needs.
   private readonly TTL_S = 120
 
   constructor(

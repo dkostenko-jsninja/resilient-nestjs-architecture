@@ -20,6 +20,8 @@ export class CircuitBreakerService implements OnModuleDestroy {
     breakerOptionOverrides: CircuitBreaker.Options<[operation: () => Promise<unknown>]>,
     private readonly stateMetric: StateMetricService,
   ) {
+    // Tuning should be per dependency and based on metrics.
+    // Current configuration opens fast and resets quickly for testing.
     this.breakerOptions = {
       timeout: 1000,
       resetTimeout: 15000,
