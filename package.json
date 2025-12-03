@@ -25,7 +25,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "k6": "npm run dotenv:k6 -- docker compose run --rm k6",
     "chaos": "npm run dotenv -- ./test/chaos/run.sh",
-    "typeorm": "node --loader ts-node/esm ./node_modules/typeorm/cli.js -d src/configs/postgres/datasource.cjs",
+    "typeorm": "npm run dotenv:local -- node --loader ts-node/esm ./node_modules/typeorm/cli.js -d src/configs/postgres/datasource.cjs",
     "migration:generate": "npm run typeorm -- migration:generate src/configs/postgres/migrations/$npm_config_name",
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
