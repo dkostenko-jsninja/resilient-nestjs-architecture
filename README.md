@@ -2,7 +2,7 @@
 
 A fault-tolerant NestJS backend demonstrating safe retries, fallback cache, circuit breaking, message-queue-based write-path recovery, and full observability via OpenTelemetry, Jaeger, Prometheus, and Grafana.  
 
-Detailed description: https://medium.com/
+Detailed description: https://medium.com/@dmytro_kostenko/resilient-backend-architecture-from-implementation-to-chaos-testing-2e98269fa346
 
 ## Setup
 
