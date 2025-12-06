@@ -7,10 +7,9 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "predotenv": "./predotenv.sh",
-    "dotenv": "dotenv -e .env.core -e .env.overlay --",
-    "dotenv:local": "dotenv -e .env.core -e .env.overlay.local --",
-    "dotenv:k6": "dotenv -e .env.core -e .env.k6 --",
+    "dotenv": "./predotenv.sh && dotenv -e .env.core -e .env.overlay --",
+    "dotenv:local": "./predotenv.sh && dotenv -e .env.core -e .env.overlay.local --",
+    "dotenv:k6": "./predotenv.sh && dotenv -e .env.core -e .env.k6 --",
     "start:api": "nest start --entryFile main",
     "start:worker": "nest start --entryFile worker",
     "start:api:local": "npm run dotenv:local -- npm run start:api",
